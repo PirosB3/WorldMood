@@ -1,7 +1,22 @@
 var Twit = require('twit'),
 		redis = require('redis');
 
-TARGET = [':('];
+ARGS = {
+	positive: {
+		filter: ':)',
+		key: 'positive'
+	},
+	negative: {
+		filter: ':(',
+		key: 'negative'
+	}
+}
+
+var target = ARGS[process.argv[2]];
+if (!target) {
+	console.log("Not a valid sentiment");
+	process.exit(1);
+}
 
 var twit = new Twit({
     consumer_key:         'tIPFMyYowULdaxhXAUdw'
@@ -14,10 +29,10 @@ client.on("error", function (err) {
 		console.log("Error " + err);
 });
 
-var stream = twit.stream('statuses/filter', { track: TARGET, language: 'en' })
+var stream = twit.stream('statuses/filter', { track: target.filter, language: 'en' })
 stream.on('tweet', function (tweet) {
 	var text = tweet['text'];
 
-	client.sadd('sentiment-analysis:negative', text)
+	client.sadd('sentiment-analysis:' + target.key, text)
 	console.log(text);
 })
