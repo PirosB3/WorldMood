@@ -18,3 +18,13 @@ class FormattingTestCase(unittest.TestCase):
         text = "Keep calm &amp; carry on"
         result = formatting.replace_html_entities(text)
         self.assertEqual(result, "Keep calm & carry on")
+
+    def test_should_remove_stopwords(self):
+        text = "it's the best"
+        result = formatting.remove_noise(text, ['it', 'the'])
+        self.assertEqual(result, "best")
+
+    def test_should_remove_repetitive_chars(self):
+        text = "Helloooooo world I ammm comingggg"
+        result = formatting.remove_repetitons(text)
+        self.assertEqual(result, "Hello world I am coming")

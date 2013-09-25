@@ -1,10 +1,14 @@
 import functools
 import re
 
+import nltk
+
 HASHTAG_RE = re.compile('#\w*[a-zA-Z_]+\w*')
 NAME_RE = re.compile('@[A-Za-z0-9]+')
 START_WITH_SPACE_RE = re.compile('^\s+')
 END_WITH_SPACE_RE = re.compile('\s+$')
+
+MIN_CHARS= 2
 
 HTML_ENTITIES = {
   '&': '&amp;',
@@ -32,3 +36,32 @@ def replace_html_entities(text):
     for to_replace, to_match in HTML_ENTITIES.iteritems():
         stripped_text = stripped_text.replace(to_match, to_replace)
     return _finalize_stripping(stripped_text)
+
+def remove_noise(text, stopwords):
+
+    tokens = nltk.wordpunct_tokenize(text)
+    filtered_tokens = filter(lambda w: w not in stopwords and len(w) > MIN_CHARS, tokens)
+    return ' '.join(filtered_tokens)
+
+def remove_repetitons(text):
+    tokens = nltk.wordpunct_tokenize(text)
+    
+    def _chunk(word):
+        i = len(word)-1
+        last_char = None
+        while i > 0:
+            current_char = word[i]
+            if not last_char:
+                last_char = current_char
+            else:
+                if current_char == last_char:
+                    i -= 1
+                else:
+                    break
+        return word[0:i+2]
+
+    return ' '.join(map(_chunk, tokens))
+
+def lemmatize_words(text, lemmatizer):
+    tokens = nltk.wordpunct_tokenize(text)
+    return ' '.join(map(lemmatizer.lemmatize, tokens))
