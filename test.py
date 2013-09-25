@@ -15,3 +15,6 @@ class FormattingTestCase(unittest.TestCase):
         self.assertEqual(result, "Hey , hows it goin? I'm with")
 
     def test_should_replace_html_entities(self):
+        text = "Keep calm &amp; carry on"
+        result = formatting.replace_html_entities(text)
+        self.assertEqual(result, "Keep calm & carry on")
