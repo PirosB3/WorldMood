@@ -62,6 +62,13 @@ def remove_repetitons(text):
 
     return ' '.join(map(_chunk, tokens))
 
+def make_lowercase(text):
+    return text.lower()
+
+def stem_words(text, stemmer):
+    tokens = nltk.wordpunct_tokenize(text)
+    return ' '.join(map(stemmer.stem, tokens))
+
 def lemmatize_words(text, lemmatizer):
     tokens = nltk.wordpunct_tokenize(text)
     return ' '.join(map(lemmatizer.lemmatize, tokens))
