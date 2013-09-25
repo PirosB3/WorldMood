@@ -65,3 +65,10 @@ def remove_repetitons(text):
 def lemmatize_words(text, lemmatizer):
     tokens = nltk.wordpunct_tokenize(text)
     return ' '.join(map(lemmatizer.lemmatize, tokens))
+
+class FormatterPipeline:
+    def __init__(self, *formatters):
+        self.formatters = formatters
+
+    def process(self, text):
+        return reduce(lambda t, fm: fm(t), self.formatters, text)

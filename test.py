@@ -28,3 +28,11 @@ class FormattingTestCase(unittest.TestCase):
         text = "Helloooooo world I ammm comingggg"
         result = formatting.remove_repetitons(text)
         self.assertEqual(result, "Hello world I am coming")
+
+    def test_workflow(self):
+        wf = formatting.FormatterPipeline(
+            formatting.strip_hashtags,
+            formatting.strip_names
+        )
+        result = wf.process('#fucking @aaaaa #asjdhga Hello world #lorem 123 #1psum')
+        self.assertEqual(result, 'Hello world 123')
