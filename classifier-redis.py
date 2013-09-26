@@ -14,7 +14,7 @@ from nltk.corpus import stopwords
 from formatting import FormatterPipeline
 import formatting
 
-N_TO_TEST = [500, 800, 1000, 1150]
+N_TO_TEST = [500, 800, 900, 1000, 1150]
 RT_RE = re.compile('@[A-Za-z0-9]+')
 HASHTAG_RE = re.compile('#\w*[a-zA-Z_]+\w*')
 
@@ -54,15 +54,18 @@ def get_features():
     client = redis.Redis()
     pos_sentences = list(client.smembers('sentiment-analysis-4:positive'))
     neg_sentences = list(client.smembers('sentiment-analysis-4:negative'))
+    neutral_sentences = list(client.smembers('sentiment-analysis-4:neutral'))
 
     pos_features = map(functools.partial(_format, sentiment='pos'), pos_sentences)
     neg_features = map(functools.partial(_format, sentiment='neg'), neg_sentences)
-    return pos_features, neg_features
+    neutral_features = map(functools.partial(_format, sentiment='neutral'), neutral_sentences)
+    return pos_features, neg_features, neutral_features
 
 def get_most_informative_features(freq_dist, cond_freq_dist):
     pos_word_count = cond_freq_dist['pos'].N()
     neg_word_count = cond_freq_dist['neg'].N()
-    total_word_count = pos_word_count + neg_word_count
+    neutral_word_count = cond_freq_dist['neutral'].N()
+    total_word_count = pos_word_count + neg_word_count + neutral_word_count
 
     result = []
     for word, total_freq in freq_dist.iteritems():
@@ -70,10 +73,12 @@ def get_most_informative_features(freq_dist, cond_freq_dist):
             total_freq, pos_word_count), total_word_count)
         neg_score = BigramAssocMeasures.chi_sq(cond_freq_dist['neg'][word], (
             total_freq, neg_word_count), total_word_count)
-        result.append((pos_score + neg_score, word))
+        neutral_score = BigramAssocMeasures.chi_sq(cond_freq_dist['neutral'][word], (
+            total_freq, neg_word_count), total_word_count)
+        result.append((pos_score + neg_score + neutral_score, word))
     return [word for score, word in sorted(result, reverse=True)]
 
-def evaluate_classifier(valid_features, pos_features, neg_features):
+def evaluate_classifier(valid_features, pos_features, neg_features, neutral_features):
 
     def _extract_valid(feature):
         res = {}
@@ -85,25 +90,26 @@ def evaluate_classifier(valid_features, pos_features, neg_features):
 
     pos_cutoff = len(pos_features) * 3/4
     neg_cutoff = len(neg_features) * 3/4
-    train_set = pos_features[:pos_cutoff] + neg_features[:neg_cutoff]
-    test_set = pos_features[pos_cutoff:] + neg_features[neg_cutoff:]
+    neutral_cutoff = len(neutral_features) * 3/4
+    train_set = pos_features[:pos_cutoff] + neg_features[:neg_cutoff] + neutral_features[:neutral_cutoff]
+    test_set = pos_features[pos_cutoff:] + neg_features[neg_cutoff:] + neutral_features[neutral_cutoff:]
 
     classifier = NaiveBayesClassifier.train(map(_extract_valid, train_set))
     print "Built classifier."
 
-    #classifier.show_most_informative_features(10)
+    classifier.show_most_informative_features(10)
     accuracy = nltk.classify.util.accuracy(classifier, map(_extract_valid, test_set))
     print 'Accuracy: ', accuracy
     return accuracy, classifier
 
 def main():
     # Fetch features from phrases
-    pos_features, neg_features = get_features()
+    pos_features, neg_features, neutral_features = get_features()
 
     # create frequency distribution
     freq_dist = FreqDist()
     cond_freq_dist = ConditionalFreqDist()
-    for features, sentiment in [(pos_features, 'pos'), (neg_features, 'neg')]:
+    for features, sentiment in [(pos_features, 'pos'), (neg_features, 'neg'), (neutral_features, 'neutral')]:
         for feature in features:
             for word in feature[0].keys():
                 freq_dist.inc(word)
@@ -116,7 +122,7 @@ def main():
         # train a new classifier and then test accuracy
         print "Testing with %s high information features" % n
         print "-----------------------------------------"
-        accuracy, classifier = evaluate_classifier(features[:n], pos_features, neg_features)
+        accuracy, classifier = evaluate_classifier(features[:n], pos_features, neg_features, neutral_features)
         scores.append((accuracy, classifier))
 
     classifier = sorted(scores, reverse=True)[0][1]
@@ -128,18 +134,17 @@ def main():
     print "Listening to ZMQ"
     while True:
         message = sock.recv()
-        message_formatted = FORMATTER.process(message)
 
+        message_formatted = FORMATTER.process(message)
         x = {}
         for z in nltk.wordpunct_tokenize(message_formatted):
             x[z] = True
 
-        print "[%s]: %s" % (classifier.classify(x), message)
+        classification = classifier.classify(x)
+        classification_prob = classifier.prob_classify(x).prob(classification)
+        if classification_prob > .8:
+            print "[%s]: %s" % (classification, message)
         sock.send(classifier.classify(x))
-
-
-    
-
 
 
 if __name__ == '__main__':
