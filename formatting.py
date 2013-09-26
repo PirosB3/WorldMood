@@ -7,6 +7,7 @@ HASHTAG_RE = re.compile('#\w*[a-zA-Z_]+\w*')
 NAME_RE = re.compile('@[A-Za-z0-9]+')
 START_WITH_SPACE_RE = re.compile('^\s+')
 END_WITH_SPACE_RE = re.compile('\s+$')
+GRUBER_URLINTEXT_PAT = re.compile(ur'(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?\xab\xbb\u201c\u201d\u2018\u2019]))')
 
 MIN_CHARS= 2
 
@@ -28,6 +29,7 @@ def _strip_re(context_re, text):
     stripped_text= context_re.sub('', text)
     return _finalize_stripping(stripped_text)
 
+strip_urls = functools.partial(_strip_re, GRUBER_URLINTEXT_PAT)
 strip_hashtags = functools.partial(_strip_re, HASHTAG_RE)
 strip_names = functools.partial(_strip_re, NAME_RE)
 

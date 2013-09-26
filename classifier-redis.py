@@ -1,3 +1,4 @@
+import zmq
 import redis
 import functools
 import heapq
@@ -13,19 +14,20 @@ from nltk.corpus import stopwords
 from formatting import FormatterPipeline
 import formatting
 
-N_TO_TEST = [1000]
+N_TO_TEST = [500, 800, 1000, 1150]
 RT_RE = re.compile('@[A-Za-z0-9]+')
 HASHTAG_RE = re.compile('#\w*[a-zA-Z_]+\w*')
 
 FORMATTER = FormatterPipeline(
     formatting.make_lowercase,
+    formatting.strip_urls,
     formatting.strip_hashtags,
     formatting.strip_names,
     formatting.replace_html_entities,
-    #formatting.remove_repetitons,
+    formatting.remove_repetitons,
     functools.partial(
         formatting.remove_noise,
-        stopwords = stopwords.words('english')
+        stopwords = stopwords.words('english') + ['rt']
     ),
     functools.partial(
         formatting.stem_words,
@@ -50,8 +52,8 @@ def get_features():
 
 
     client = redis.Redis()
-    pos_sentences = list(client.smembers('sentiment-analysis-3:positive'))
-    neg_sentences = list(client.smembers('sentiment-analysis-3:negative'))
+    pos_sentences = list(client.smembers('sentiment-analysis-4:positive'))
+    neg_sentences = list(client.smembers('sentiment-analysis-4:negative'))
 
     pos_features = map(functools.partial(_format, sentiment='pos'), pos_sentences)
     neg_features = map(functools.partial(_format, sentiment='neg'), neg_sentences)
@@ -89,8 +91,10 @@ def evaluate_classifier(valid_features, pos_features, neg_features):
     classifier = NaiveBayesClassifier.train(map(_extract_valid, train_set))
     print "Built classifier."
 
-    print 'Accuracy: ', nltk.classify.util.accuracy(classifier, map(_extract_valid, test_set))
-    classifier.show_most_informative_features(10)
+    #classifier.show_most_informative_features(10)
+    accuracy = nltk.classify.util.accuracy(classifier, map(_extract_valid, test_set))
+    print 'Accuracy: ', accuracy
+    return accuracy, classifier
 
 def main():
     # Fetch features from phrases
@@ -106,12 +110,35 @@ def main():
                 cond_freq_dist[sentiment].inc(word)
 
     # Get most informative features
+    scores = []
     features = get_most_informative_features(freq_dist, cond_freq_dist)
     for n in N_TO_TEST:
         # train a new classifier and then test accuracy
         print "Testing with %s high information features" % n
         print "-----------------------------------------"
-        evaluate_classifier(features[:n], pos_features, neg_features)
+        accuracy, classifier = evaluate_classifier(features[:n], pos_features, neg_features)
+        scores.append((accuracy, classifier))
+
+    classifier = sorted(scores, reverse=True)[0][1]
+
+    # loop and classify incoming data
+    context = zmq.Context.instance()
+    sock = context.socket(zmq.REP)
+    sock.connect('tcp://localhost:9999')
+    print "Listening to ZMQ"
+    while True:
+        message = sock.recv()
+        message_formatted = FORMATTER.process(message)
+
+        x = {}
+        for z in nltk.wordpunct_tokenize(message_formatted):
+            x[z] = True
+
+        print "[%s]: %s" % (classifier.classify(x), message)
+        sock.send(classifier.classify(x))
+
+
+    
 
 
 
