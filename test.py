@@ -3,6 +3,7 @@ import mock
 
 import formatting
 import phrase
+import utils
 
 class FormattingTestCase(unittest.TestCase):
 
@@ -65,7 +66,7 @@ class PhraseTestCase(unittest.TestCase):
         w = phrase.Phrase("Hello World", self.formatter)
 
         n_informative_features = ['hello']
-        self.assertEqual(w.get_features(include_only=n_informative_features), {
+        self.assertEqual(w.get_features(n_features=n_informative_features), {
             'has(hello)': True
         })
 
@@ -140,3 +141,23 @@ class TextProcessorTestCase(unittest.TestCase):
         tp = phrase.TextProcessor(self.data)
         fd, cfd = tp._build_prob_dist(self.freq_dist, self.cond_freq_dist)
         self.assertEqual(8, fd.inc.call_count)
+
+class UtilsTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.p = mock.Mock()
+        self.p.get_features.return_value = {
+            'has(i)': True,
+            'has(have)': True,
+            'has(machine)': True,
+            'has(gun)': True,
+            'has(machine,gun)': True,
+        }
+
+    def test_can_process_batch(self):
+        res = utils.batch_get_features({
+            'pos': [self.p, self.p, self.p],
+            'neg': [self.p, self.p, self.p]
+        })
+        self.assertEqual(2, len(res.keys()))
+        self.assertTrue(res['pos'][0]['has(i)'])
