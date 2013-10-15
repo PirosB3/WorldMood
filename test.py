@@ -69,19 +69,19 @@ class PhraseTestCase(unittest.TestCase):
             'has(hello)': True
         })
 
-    #def test_should_build_feature_dict_with_bigrams(self):
-        #self.formatter.process.return_value = ['i', 'have', 'machine', 'gun']
-        #w = phrase.Phrase("I have a machine gun", self.formatter)
+    def test_should_build_feature_dict_with_bigrams(self):
+        self.formatter.process.return_value = ['i', 'have', 'machine', 'gun']
+        w = phrase.Phrase("I have a machine gun", self.formatter)
 
-        #bigrams = [('machine', 'gun')]
-        #self.assertEqual(w.get_features(bigrams=bigrams), {
-            #'has(i)': True,
-            #'has(have)': True,
-            #'has(a)': True,
-            #'has(machine)': True,
-            #'has(gun)': True,
-            #'has(machine,gun)': True,
-        #})
+        ba = mock.Mock()
+        ba.scan_features_for_bigrams.return_value = [('machine', 'gun')]
+        self.assertEqual(w.get_features(bigram_analyzer=ba), {
+            'has(i)': True,
+            'has(have)': True,
+            'has(machine)': True,
+            'has(gun)': True,
+            'has(machine,gun)': True,
+        })
 
 
 class BigramAnalyzerTestCase(unittest.TestCase):
@@ -106,3 +106,15 @@ class BigramAnalyzerTestCase(unittest.TestCase):
 
         res = b.find_bigrams_for('hello')
         self.assertEqual(res, ['world'])
+
+    def test_can_scan(self):
+        b = phrase.BigramAnalyzer(self.bigrams)
+        features = ['hello', 'machine', 'gun', 'world']
+        res = b.scan_features_for_bigrams(features)
+
+        self.assertEqual([('machine', 'gun')], res)
+
+        features = ['hello', 'hello', 'world']
+        res = b.scan_features_for_bigrams(features)
+
+        self.assertEqual([('hello', 'world')], res)
