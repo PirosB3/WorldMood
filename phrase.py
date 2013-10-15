@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from nltk.probability import FreqDist, ConditionalFreqDist
+
 class BigramAnalyzer(object):
     def __init__(self, bigrams):
         self.formatted_bigrams = self._format_bigram(bigrams)
@@ -54,3 +56,36 @@ class Phrase(object):
                 res['has(%s,%s)' % (terma, termb)] = True
 
         return res
+
+class TextProcessor(object):
+    def __init__(self, phrases):
+        self.phrases = phrases
+
+    def _get_class_sentiments(self):
+        return self.phrases.keys()
+
+    def _build_prob_dist(self, fd, cfd):
+        sentiments = self.phrases.keys()
+        for sentiment in sentiments:
+            for phrase in self.phrases[sentiment]:
+                formatted_text = phrase.get_formatted_text()
+                for word in formatted_text:
+                    fd.inc(word)
+                    print "adding %s with %s" % (word, sentiment)
+                    cfd[sentiment].inc(word)
+        return fd, cfd
+
+    def _build_most_informative_features(self):
+        freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
+                                        ConditionalFreqDist())
+        res = []
+        for word, total_freq in freq_dist.iteritems():
+            score = 0
+            for sentiment in self._get_class_sentiments():
+                score += BigramAssocMeasures.chi_sq(
+                    cond_freq_dist[sentiment][word],
+                    (total_freq, cond_freq_dist[sentiment].N()),
+                    total_word_count
+                )
+            res.append((score, word))
+        return [word for score, word in sorted(res, reverse=True)]

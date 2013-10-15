@@ -109,12 +109,34 @@ class BigramAnalyzerTestCase(unittest.TestCase):
 
     def test_can_scan(self):
         b = phrase.BigramAnalyzer(self.bigrams)
+
         features = ['hello', 'machine', 'gun', 'world']
         res = b.scan_features_for_bigrams(features)
-
         self.assertEqual([('machine', 'gun')], res)
 
         features = ['hello', 'hello', 'world']
         res = b.scan_features_for_bigrams(features)
-
         self.assertEqual([('hello', 'world')], res)
+
+
+class TextProcessorTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.freq_dist = mock.MagicMock()
+        self.cond_freq_dist = mock.MagicMock()
+
+        p1 = mock.Mock()
+        p1.get_formatted_text.return_value = ['lorem', 'ipsum']
+
+        p2 = mock.Mock()
+        p2.get_formatted_text.return_value = ['i', 'feel', 'so', 'lorem', 'cool', 'today']
+
+        self.data = {
+            'pos': [p1],
+            'neg': [p2]
+        }
+
+    def test_should_convert_to_words(self):
+        tp = phrase.TextProcessor(self.data)
+        fd, cfd = tp._build_prob_dist(self.freq_dist, self.cond_freq_dist)
+        self.assertEqual(8, fd.inc.call_count)
