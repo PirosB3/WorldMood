@@ -1,6 +1,8 @@
 import unittest
+import mock
 
 import formatting
+import phrase
 
 class FormattingTestCase(unittest.TestCase):
 
@@ -36,3 +38,71 @@ class FormattingTestCase(unittest.TestCase):
         )
         result = wf.process('#fucking @aaaaa #asjdhga Hello world #lorem 123 #1psum')
         self.assertEqual(result, 'Hello world 123')
+
+class PhraseTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.formatter = mock.Mock()
+
+    def test_should_accept_a_formatter(self):
+        self.formatter.process.return_value = ['hello', 'world']
+        w = phrase.Phrase("Hello World", self.formatter)
+
+        self.assertEqual(w.get_text(), "Hello World")
+        self.assertEqual(w.get_formatted_text(), ['hello', 'world'])
+
+    def test_should_build_feature_dict(self):
+        self.formatter.process.return_value = ['hello', 'world']
+        w = phrase.Phrase("Hello World", self.formatter)
+
+        self.assertEqual(w.get_features(), {
+            'has(hello)': True,
+            'has(world)': True
+        })
+
+    def test_should_build_feature_dict_with_exclusion_list(self):
+        self.formatter.process.return_value = ['hello', 'world']
+        w = phrase.Phrase("Hello World", self.formatter)
+
+        n_informative_features = ['hello']
+        self.assertEqual(w.get_features(include_only=n_informative_features), {
+            'has(hello)': True
+        })
+
+    #def test_should_build_feature_dict_with_bigrams(self):
+        #self.formatter.process.return_value = ['i', 'have', 'machine', 'gun']
+        #w = phrase.Phrase("I have a machine gun", self.formatter)
+
+        #bigrams = [('machine', 'gun')]
+        #self.assertEqual(w.get_features(bigrams=bigrams), {
+            #'has(i)': True,
+            #'has(have)': True,
+            #'has(a)': True,
+            #'has(machine)': True,
+            #'has(gun)': True,
+            #'has(machine,gun)': True,
+        #})
+
+
+class BigramAnalyzerTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.bigrams = [
+            ('machine', 'gun'),
+            ('machine', 'man'),
+            ('hello', 'world'),
+        ]
+
+    def test_formatter(self):
+        b = phrase.BigramAnalyzer(self.bigrams)
+        self.assertEqual(2, len(b.formatted_bigrams['machine']))
+        self.assertEqual(1, len(b.formatted_bigrams['hello']))
+
+    def test_can_find(self):
+        b = phrase.BigramAnalyzer(self.bigrams)
+
+        res = b.find_bigrams_for('machine')
+        self.assertEqual(res, ['gun', 'man'])
+
+        res = b.find_bigrams_for('hello')
+        self.assertEqual(res, ['world'])
