@@ -71,27 +71,30 @@ class Phrase(object):
         return res
 
 class TextProcessor(object):
-    def __init__(self, phrases):
+    def __init__(self, phrases, formatter):
         self.phrases = phrases
+        self.formatter = formatter
 
     def _get_class_sentiments(self):
         return self.phrases.keys()
 
-    def get_bigrams(self, n):
+    def get_bigram_analyzer(self, n):
         words = []
         for sentiment in self._get_class_sentiments():
-            word_features = [p.get_formatted_text() for p in self.phrases[sentiment]]
-            words.update(word_features)
+            formatted_words_in_phrases = [p.get_formatted_text(self.formatter)
+                for p in self.phrases[sentiment]]
+            for word in formatted_words_in_phrases:
+                words.extend(word)
 
         bigram_measures = collocations.BigramAssocMeasures()
         finder = collocations.BigramCollocationFinder.from_words(words)
-        return finder.nbest(bigram_measures.pmi, n)
+        return BigramAnalyzer(finder.nbest(bigram_measures.likelihood_ratio, n))
 
     def _build_prob_dist(self, fd, cfd):
         sentiments = self.phrases.keys()
         for sentiment in sentiments:
             for phrase in self.phrases[sentiment]:
-                formatted_text = phrase.get_formatted_text()
+                formatted_text = phrase.get_formatted_text(self.formatter)
                 for word in formatted_text:
                     fd.inc(word)
                     cfd[sentiment].inc(word)
@@ -99,7 +102,7 @@ class TextProcessor(object):
 
     def get_most_informative_features(self, n):
         freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
-                                        ConditionalFreqDist())
+            ConditionalFreqDist())
         res = []
         for word, total_freq in freq_dist.iteritems():
             score = 0
@@ -107,7 +110,7 @@ class TextProcessor(object):
                 score += BigramAssocMeasures.chi_sq(
                     cond_freq_dist[sentiment][word],
                     (total_freq, cond_freq_dist[sentiment].N()),
-                    total_word_count
+                    freq_dist.N()
                 )
             res.append((score, word))
         return [word for score, word in sorted(res, reverse=True)][:n]
