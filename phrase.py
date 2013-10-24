@@ -1,6 +1,18 @@
 from collections import defaultdict
 
+from nltk.metrics import BigramAssocMeasures
 from nltk.probability import FreqDist, ConditionalFreqDist
+from nltk import collocations
+
+class Word(object):
+    def __init__(self, word):
+        self.word = word
+
+    def get_word(self):
+        return self.word
+
+    def get_formatted_word(self, formatter):
+        return formatter.process_word(self.word)
 
 class BigramAnalyzer(object):
     def __init__(self, bigrams):
@@ -29,24 +41,25 @@ class BigramAnalyzer(object):
         return res
 
 class Phrase(object):
-    def __init__(self, text, formatter):
-        self.text = text
-        self.formatter = formatter
+    def __init__(self, text, tokenizer):
+        self.tokenizer = tokenizer
+        self.words = [Word(w) for w in tokenizer(text)]
 
     def get_text(self):
-        return self.text
+        return ' '.join([w.get_word() for w in self.words])
 
-    def get_formatted_text(self):
-        return self.formatter.process(self.text)
+    def get_formatted_text(self, formatter):
+        return filter(None, [w.get_formatted_word(formatter)
+            for w in self.words])
 
-    def get_features(self, include_only=None, bigram_analyzer=None):
-        formatted_text = self.get_formatted_text()
+    def get_features(self, formatter, n_features=None, bigram_analyzer=None):
+        formatted_text = self.get_formatted_text(formatter)
 
         res = {}
         for word_i, word in enumerate(formatted_text):
 
             # Single features
-            can_add = include_only == None or word in include_only
+            can_add = n_features == None or word in n_features
             if can_add:
                 res['has(%s)' % word] = True
 
@@ -64,6 +77,16 @@ class TextProcessor(object):
     def _get_class_sentiments(self):
         return self.phrases.keys()
 
+    def get_bigrams(self, n):
+        words = []
+        for sentiment in self._get_class_sentiments():
+            word_features = [p.get_formatted_text() for p in self.phrases[sentiment]]
+            words.update(word_features)
+
+        bigram_measures = collocations.BigramAssocMeasures()
+        finder = collocations.BigramCollocationFinder.from_words(words)
+        return finder.nbest(bigram_measures.pmi, n)
+
     def _build_prob_dist(self, fd, cfd):
         sentiments = self.phrases.keys()
         for sentiment in sentiments:
@@ -71,11 +94,10 @@ class TextProcessor(object):
                 formatted_text = phrase.get_formatted_text()
                 for word in formatted_text:
                     fd.inc(word)
-                    print "adding %s with %s" % (word, sentiment)
                     cfd[sentiment].inc(word)
         return fd, cfd
 
-    def _build_most_informative_features(self):
+    def get_most_informative_features(self, n):
         freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
                                         ConditionalFreqDist())
         res = []
@@ -88,4 +110,4 @@ class TextProcessor(object):
                     total_word_count
                 )
             res.append((score, word))
-        return [word for score, word in sorted(res, reverse=True)]
+        return [word for score, word in sorted(res, reverse=True)][:n]

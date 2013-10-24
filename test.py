@@ -5,6 +5,18 @@ import formatting
 import phrase
 import utils
 
+from nltk import word_tokenize
+
+class WordTestCase(unittest.TestCase):
+
+    def test_should_accept_a_word_and_process_with_formatter(self):
+        formatter = mock.Mock()
+        formatter.process_word.return_value = None
+
+        w = phrase.Word('hello')
+        self.assertEqual('hello', w.get_word())
+        self.assertFalse(w.get_formatted_word(formatter))
+
 class FormattingTestCase(unittest.TestCase):
 
     def test_should_strip_hashtags(self):
@@ -45,45 +57,56 @@ class PhraseTestCase(unittest.TestCase):
     def setUp(self):
         self.formatter = mock.Mock()
 
-    def test_should_accept_a_formatter(self):
-        self.formatter.process.return_value = ['hello', 'world']
-        w = phrase.Phrase("Hello World", self.formatter)
+    def test_should_get_text_and_formatted(self):
 
-        self.assertEqual(w.get_text(), "Hello World")
-        self.assertEqual(w.get_formatted_text(), ['hello', 'world'])
+        def side_effect(word):
+            if word == 'fucking':
+                return None
+            return word.lower()
+        self.formatter.process_word.side_effect = side_effect
+
+        w = phrase.Phrase("Hello fucking World", word_tokenize)
+        self.assertEqual(w.get_text(), 'Hello fucking World')
+        self.assertEqual(w.get_formatted_text(self.formatter), ['hello', 'world'])
 
     def test_should_build_feature_dict(self):
-        self.formatter.process.return_value = ['hello', 'world']
-        w = phrase.Phrase("Hello World", self.formatter)
 
-        self.assertEqual(w.get_features(), {
+        def side_effect(word):
+            return word.lower()
+
+        self.formatter.process_word.side_effect = side_effect
+        w = phrase.Phrase("Hello World", word_tokenize)
+
+        self.assertEqual(w.get_features(self.formatter), {
             'has(hello)': True,
             'has(world)': True
         })
 
     def test_should_build_feature_dict_with_exclusion_list(self):
-        self.formatter.process.return_value = ['hello', 'world']
-        w = phrase.Phrase("Hello World", self.formatter)
+
+        def side_effect(word):
+            return word.lower()
+
+        self.formatter.process_word.side_effect = side_effect
+        w = phrase.Phrase("Hello World", word_tokenize)
 
         n_informative_features = ['hello']
-        self.assertEqual(w.get_features(n_features=n_informative_features), {
-            'has(hello)': True
-        })
+        result = w.get_features(self.formatter, n_features=n_informative_features)
+        self.assertEqual(result, {'has(hello)': True})
 
     def test_should_build_feature_dict_with_bigrams(self):
-        self.formatter.process.return_value = ['i', 'have', 'machine', 'gun']
-        w = phrase.Phrase("I have a machine gun", self.formatter)
+        w = phrase.Phrase("I have a machine gun", word_tokenize)
+        w.get_formatted_text = mock.Mock(return_value=['i', 'have', 'machine', 'gun'])
 
         ba = mock.Mock()
         ba.scan_features_for_bigrams.return_value = [('machine', 'gun')]
-        self.assertEqual(w.get_features(bigram_analyzer=ba), {
+        self.assertEqual(w.get_features(self.formatter, bigram_analyzer=ba), {
             'has(i)': True,
             'has(have)': True,
             'has(machine)': True,
             'has(gun)': True,
             'has(machine,gun)': True,
         })
-
 
 class BigramAnalyzerTestCase(unittest.TestCase):
 
