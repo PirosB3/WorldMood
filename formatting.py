@@ -80,9 +80,12 @@ class FormatterPipeline:
         self.formatters = formatters
 
     def process_word(self, word):
-        res = reduce(lambda t, fm: fm(t), self.formatters, text)
-        if not res:
-            return None
+        res = word
+        for formatter in self.formatters:
+            res = formatter(res)
+            if not res:
+                return None
+        return res
 
     def process(self, text):
         return reduce(lambda t, fm: fm(t), self.formatters, text)
