@@ -67,6 +67,11 @@ def remove_repetitons(text):
 def make_lowercase(text):
     return text.lower()
 
+def strip_http(text):
+    if 'http' in text:
+        return None
+    return text
+
 def stem_words(text, stemmer):
     tokens = nltk.wordpunct_tokenize(text)
     return ' '.join(map(stemmer.stem, tokens))
