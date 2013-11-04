@@ -24,6 +24,11 @@ class FormattingTestCase(unittest.TestCase):
         result = formatting.strip_hashtags(text)
         self.assertFalse(result)
 
+    def test_should_remove_non_chars(self):
+        text = '#12oclock'
+        result = formatting.strip_nonchars(text)
+        self.assertEqual(result, 'oclock')
+
     def test_should_strip_names(self):
         text = "@lorem"
         result = formatting.strip_names(text)
@@ -40,9 +45,21 @@ class FormattingTestCase(unittest.TestCase):
         self.assertFalse(result)
 
     def test_should_remove_repetitive_chars(self):
-        text = "Helloooooo"
+        text = "blooooooooooood"
         result = formatting.remove_repetitons(text)
-        self.assertEqual(result, "Hello")
+        self.assertEqual(result, "blood")
+
+        text = "hello"
+        result = formatting.remove_repetitons(text)
+        self.assertEqual(result, "hello")
+
+        text = "weeeeeeeeeeee"
+        result = formatting.remove_repetitons(text)
+        self.assertEqual(result, "wee")
+
+        text = "xxxxxxxxxxxyyxxxxxxxxxxxx"
+        result = formatting.remove_repetitons(text)
+        self.assertEqual(result, "xxyyxx")
 
 class PhraseTestCase(unittest.TestCase):
 
@@ -153,7 +170,7 @@ class TextProcessorTestCase(unittest.TestCase):
         }
 
     def test_should_convert_to_words(self):
-        tp = phrase.TextProcessor(self.data)
+        tp = phrase.TextProcessor(self.data, None)
         fd, cfd = tp._build_prob_dist(self.freq_dist, self.cond_freq_dist)
         self.assertEqual(8, fd.inc.call_count)
 

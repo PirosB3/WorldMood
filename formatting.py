@@ -5,6 +5,7 @@ import nltk
 
 HASHTAG_RE = re.compile('#\w*[a-zA-Z_]+\w*')
 NAME_RE = re.compile('@[A-Za-z0-9]+')
+NONCHAR_RE = re.compile('[^a-z]')
 START_WITH_SPACE_RE = re.compile('^\s+')
 END_WITH_SPACE_RE = re.compile('\s+$')
 GRUBER_URLINTEXT_PAT = re.compile(ur'(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?\xab\xbb\u201c\u201d\u2018\u2019]))')
@@ -33,6 +34,9 @@ strip_urls = functools.partial(_strip_re, GRUBER_URLINTEXT_PAT)
 strip_hashtags = functools.partial(_strip_re, HASHTAG_RE)
 strip_names = functools.partial(_strip_re, NAME_RE)
 
+def strip_nonchars(text):
+    return NONCHAR_RE.sub('', text)
+
 def replace_html_entities(text):
     stripped_text= text
     for to_replace, to_match in HTML_ENTITIES.iteritems():
@@ -46,8 +50,22 @@ def remove_noise(text, stopwords):
     return ' '.join(filtered_tokens)
 
 def remove_repetitons(text):
-    tokens = nltk.wordpunct_tokenize(text)
+    res = []
+    count = 0
+    last_char = None
+
+    for c in text:
+        if c == last_char:
+            if count < 1:
+                res.append(c)
+                count += 1
+        else:
+            res.append(c)
+            last_char = c
+            count = 0
     
+    return ''.join(res)
+
     def _chunk(word):
         i = len(word)-1
         last_char = None
@@ -66,11 +84,6 @@ def remove_repetitons(text):
 
 def make_lowercase(text):
     return text.lower()
-
-def strip_http(text):
-    if 'http' in text:
-        return None
-    return text
 
 def stem_words(text, stemmer):
     tokens = nltk.wordpunct_tokenize(text)

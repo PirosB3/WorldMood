@@ -29,10 +29,10 @@ client.on("error", function (err) {
 		console.log("Error " + err);
 });
 
-var stream = twit.stream('statuses/filter', { track: target.filter, language: 'en' })
+var stream = twit.stream('statuses/filter', { track: 'berlusconi', language: 'en' })
 stream.on('tweet', function (tweet) {
 	var text = tweet['text'];
 
-	client.sadd('sentiment-analysis:' + target.key, text)
+	//client.sadd('sentiment-analysis:' + target.key, text)
 	console.log(text);
 })
