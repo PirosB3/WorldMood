@@ -120,13 +120,6 @@ def main():
     LOGGER.info("Getting %s best bigrams" % N_BIGRAMS)
     bigram_analyzer = processor.get_bigram_analyzer(N_BIGRAMS)
 
-
-    #x = '@totallytonto It might have been.'
-    #p = phrase.Phrase(x, TOKENIZER)
-    #print p.get_features(FORMATTER, n_informative_features, bigram_analyzer)
-    #return
-
-
     # Run iteration to see what combination gives best score
     LOGGER.info("Starting test iteration for 5 times.")
     best_score = 0
