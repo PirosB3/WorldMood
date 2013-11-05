@@ -100,7 +100,7 @@ class TextProcessor(object):
                     cfd[sentiment].inc(word)
         return fd, cfd
 
-    def get_most_informative_features(self, n):
+    def get_most_informative_features(self, min_score):
         freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
             ConditionalFreqDist())
         res = []
@@ -113,4 +113,12 @@ class TextProcessor(object):
                     freq_dist.N()
                 )
             res.append((score, word))
-        return [word for score, word in sorted(res, reverse=True)][:n]
+        
+        order_res = sorted(res, reverse=True)
+        result_res = []
+        for score, word in order_res:
+            if score >= min_score:
+                result_res.append(word)
+            else:
+                break
+        return result_res
