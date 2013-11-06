@@ -5,6 +5,7 @@ import logging
 import random
 
 import nltk
+import numpy
 import redis
 from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import stopwords
@@ -15,9 +16,9 @@ from scipy.optimize import anneal
 import formatting, phrase
 
 N_DATASET_ITERATIONS= 5
-N_INFORMATIVE_FEATURES= 4000
-N_BIGRAMS= 2000
-N_CUTOFF = 1.0/4.0
+MIN_SCORE_FEATURES = 3.00
+N_BIGRAMS= 1000
+N_CUTOFF = 1.0/3.0
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)-15s %(module)s] %(message)s')
 LOGGER = logging.getLogger(__name__) 
@@ -61,14 +62,19 @@ def get_phrases_from_redis_and_csv():
     pos_redis = [make_phrase(p) for p in client.smembers('sentiment-analysis-3:positive')]
     neg_redis = [make_phrase(p) for p in client.smembers('sentiment-analysis-3:negative')]
 
-    with open('handwriten_validated_output.csv', 'rb') as f:
+    with open('testdata.manual.converted.csv', 'rb') as f:
         pos_csv, neg_csv = get_csv(f)
     pos_csv = map(make_phrase, pos_csv)
     neg_csv = map(make_phrase, neg_csv)
 
+    with open('handwriten_validated_output.csv', 'rb') as f:
+        pos_csv2, neg_csv2 = get_csv(f)
+    pos_csv2 = map(make_phrase, pos_csv2)
+    neg_csv2 = map(make_phrase, neg_csv2)
+
     return {
-        'positive': pos_redis + pos_csv,
-        'negative': neg_redis + neg_csv
+        'positive': pos_redis + pos_csv + pos_csv2,
+        'negative': neg_redis + neg_csv + neg_csv2
     }
 
 def convert_phrases_to_feature_vectors(data, n_informative_features, bigram_analyzer):
@@ -77,9 +83,6 @@ def convert_phrases_to_feature_vectors(data, n_informative_features, bigram_anal
         features = p.get_features(FORMATTER, n_informative_features, bigram_analyzer)
         if len(features.keys()) > 0:
             res.append((features, sentiment))
-        else:
-            #LOGGER.info("Dropped phrase: %s. %s" % (p.get_text(), p.get_features(FORMATTER)))
-            print "%s. %s" % (p.get_text(), p.get_formatted_text(FORMATTER))
     return res
 
 def split_phrase_data(phrases, split):
@@ -115,8 +118,8 @@ def main():
     # Initialize the Text Processor, get bigrams and informative features
     LOGGER.info("Building text processor")
     processor = phrase.TextProcessor(phrases, FORMATTER)
-    LOGGER.info("Getting %s informative features" % N_INFORMATIVE_FEATURES)
-    n_informative_features = processor.get_most_informative_features(N_INFORMATIVE_FEATURES)
+    LOGGER.info("Getting best informative features with min. score of: %s" % MIN_SCORE_FEATURES)
+    n_informative_features = processor.get_most_informative_features(MIN_SCORE_FEATURES)
     LOGGER.info("Getting %s best bigrams" % N_BIGRAMS)
     bigram_analyzer = processor.get_bigram_analyzer(N_BIGRAMS)
 
@@ -140,8 +143,30 @@ def main():
         if best_score == score:
             best_data_set = test_set, train_set
 
+    def _evaluate_cost(args, processor, dataset):
+        n_bigrams = numpy.round(args).astype(int)
+        test_set, train_set = dataset
+
+        n_informative_features = processor.get_most_informative_features(MIN_SCORE_FEATURES)
+        bigram_analyzer = processor.get_bigram_analyzer(n_bigrams)
+
+        test_set_features = convert_phrases_to_feature_vectors(test_set, n_informative_features, bigram_analyzer)
+        train_set_features = convert_phrases_to_feature_vectors(train_set, n_informative_features, bigram_analyzer)
+
+        classifier = NaiveBayesClassifier.train(train_set_features)
+        accuracy = nltk.classify.util.accuracy(classifier, test_set_features)
+
+        LOGGER.info("Current iteration accuracy: %s" % best_score)
+        return 1.0 - accuracy
+
     # Best iteration has been done, now let's tune the params
-    LOGGER.info("BEST ITERATION IS: %s" % best_score)
+    LOGGER.info("Best iteration is: %s" % best_score)
+    params = [N_BIGRAMS]
+    max_params = sum(map(len,best_data_set))
+    LOGGER.info("Starting optimiation process: %s" % best_score)
+    res = anneal(_evaluate_cost, params, args=(processor, best_data_set), schedule='boltzmann',
+                          full_output=True, maxeval=1, lower=0,
+                          upper=max_params, learn_rate=1.0, disp=True)
 
 
 if __name__ == '__main__':
