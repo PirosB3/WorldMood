@@ -1,6 +1,7 @@
 import unittest
 import mock
 
+import data_sources
 import formatting
 import phrase
 import utils
@@ -193,3 +194,34 @@ class UtilsTestCase(unittest.TestCase):
         })
         self.assertEqual(2, len(res.keys()))
         self.assertTrue(res['pos'][0]['has(i)'])
+
+class RedisDataSourceTestCase(unittest.TestCase):
+
+    def setUp(self):
+        def _side_effect(key):
+            if key == 'stanford-corpus:positive':
+                return ['I am positive', 'me too!']
+            if key == 'stanford-corpus:negative':
+                return ['I am negative']
+
+        self.db = mock.MagicMock()
+        self.db.smembers.side_effect = _side_effect
+
+    def test_it_initializes(self):
+        ds = data_sources.RedisDataSource(self.db, 'stanford-corpus', ['positive', 'negative'])
+        self.assertEqual(len(ds.get_classes()), 2)
+
+    def test_get_data(self):
+        ds = data_sources.RedisDataSource(self.db, 'stanford-corpus', ['positive', 'negative'])
+
+        sentiments = ds.get_data()
+        self.assertEqual(len(sentiments.keys()), 2)
+        self.assertEqual(sentiments['positive'][0], 'I am positive')
+        self.assertEqual(sentiments['negative'][0], 'I am negative')
+
+    def test_get_data_constructor(self):
+        ds = data_sources.RedisDataSource(self.db, 'stanford-corpus', ['positive', 'negative'])
+        c = mock.MagicMock()
+
+        sentiments = ds.get_data(c)
+        self.assertEqual(c.call_count, 3)
