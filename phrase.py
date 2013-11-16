@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from nltk.classify import NaiveBayesClassifier
 from nltk.metrics import BigramAssocMeasures
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk import collocations
@@ -122,3 +123,46 @@ class TextProcessor(object):
             else:
                 break
         return result_res
+
+    def train_classifier(self, formatter, n_bigrams, min_score_features):
+        feats = self.get_most_informative_features(min_score_features)
+        bigrams = self.get_bigram_analyzer(n_bigrams)
+
+        return TrainedClassifier(self.phrases, formatter, bigrams, feats)
+
+class TrainedClassifier(object):
+    CLASSIFIER_CONSTRUCTOR = NaiveBayesClassifier
+
+    def __init__(self, phrases_map, formatter, bigrams, feats):
+        self.formatter = formatter
+        self.bigrams = bigrams
+        self.feats = feats
+
+        training_set = []
+        for sentiment, phrases in phrases_map.iteritems():
+            for p in phrases:
+                vec = self._phrase_to_feature_vector(p)
+                if vec:
+                    training_set.append((vec, sentiment))
+
+        self.classifier = self.CLASSIFIER_CONSTRUCTOR.train(training_set)
+
+    def _phrase_to_feature_vector(self, phrase):
+        res = phrase.get_features(self.formatter, self.feats, self.bigrams)
+        if len(res.keys()) < 1:
+            return None
+        return res
+
+    def classify(self, phrase):
+        feature_vector = phrase.get_features(self.formatter, self.feats,
+            self.bigrams)
+        if feature_vector:
+            return self.classifier.classify(feature_vector)
+        return None
+
+    def prob_classify(self, phrase):
+        feature_vector = phrase.get_features(self.formatter, self.feats,
+            self.bigrams)
+        if feature_vector:
+            return self.classifier.prob_classify(feature_vector)
+        return None

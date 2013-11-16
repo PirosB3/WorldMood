@@ -225,3 +225,23 @@ class RedisDataSourceTestCase(unittest.TestCase):
 
         sentiments = ds.get_data(c)
         self.assertEqual(c.call_count, 3)
+
+class TrainedClassifierTestCase(unittest.TestCase):
+    def setUp(self):
+        phrase.TrainedClassifier.CLASSIFIER_CONSTRUCTOR = mock.MagicMock()
+
+        self.formatter = mock.MagicMock()
+        self.bigrams = mock.MagicMock()
+        self.feats = mock.MagicMock()
+        self.phrases = mock.MagicMock()
+        self.cls = phrase.TrainedClassifier(self.phrases, self.formatter, self.bigrams,
+            self.feats)
+
+    def test_can_decompose(self):
+        p = mock.MagicMock()
+        p.get_features.return_value = {}
+        self.assertEqual(None, self.cls._phrase_to_feature_vector(p))
+
+        p = mock.MagicMock()
+        p.get_features.return_value = {'has(lol)': True}
+        self.assertEqual({'has(lol)': True}, self.cls._phrase_to_feature_vector(p))
