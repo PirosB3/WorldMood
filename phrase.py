@@ -1,3 +1,6 @@
+import os
+import pickle
+
 from collections import defaultdict
 
 from nltk.classify import NaiveBayesClassifier
@@ -166,3 +169,13 @@ class TrainedClassifier(object):
         if feature_vector:
             return self.classifier.prob_classify(feature_vector)
         return None
+
+    def serialize(self, s_dir, serializer=pickle, write_function=open):
+        to_write = {
+            os.path.join(s_dir, 'classifier.pickle'): self.classifier,
+            os.path.join(s_dir, 'bigrams.pickle'): self.bigrams,
+            os.path.join(s_dir, 'feats.pickle'): self.feats
+        }
+        for path, obj in to_write.iteritems():
+            with write_function(path, 'w') as f:
+                serializer.dump(obj, f)

@@ -245,3 +245,13 @@ class TrainedClassifierTestCase(unittest.TestCase):
         p = mock.MagicMock()
         p.get_features.return_value = {'has(lol)': True}
         self.assertEqual({'has(lol)': True}, self.cls._phrase_to_feature_vector(p))
+
+    def test_can_serialize(self):
+        s = mock.MagicMock()
+        w = mock.MagicMock()
+        self.cls.serialize('/tmp/test-classifier/', serializer=s, write_function=w)
+
+        files_written = map(lambda x: x[0][0], w.call_args_list)
+        self.assertEqual(['/tmp/test-classifier/bigrams.pickle',
+            '/tmp/test-classifier/feats.pickle',
+            '/tmp/test-classifier/classifier.pickle'], files_written)
