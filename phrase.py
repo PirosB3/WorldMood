@@ -87,6 +87,7 @@ class TextProcessor(object):
         for sentiment in self._get_class_sentiments():
             formatted_words_in_phrases = [p.get_formatted_text(self.formatter)
                 for p in self.phrases[sentiment]]
+            print "Passing word for bigram analyzer: %s" % formatted_words_in_phrases
             for word in formatted_words_in_phrases:
                 words.extend(word)
 
@@ -99,6 +100,7 @@ class TextProcessor(object):
         for sentiment in sentiments:
             for phrase in self.phrases[sentiment]:
                 formatted_text = phrase.get_formatted_text(self.formatter)
+                print "Passing word for prob dist: %s" % formatted_text
                 for word in formatted_text:
                     fd.inc(word)
                     cfd[sentiment].inc(word)
@@ -145,6 +147,7 @@ class TrainedClassifier(object):
         for sentiment, phrases in phrases_map.iteritems():
             for p in phrases:
                 vec = self._phrase_to_feature_vector(p)
+                print "Passing word for feature vector composition: %s" % vec
                 if vec:
                     training_set.append((vec, sentiment))
 
