@@ -17,8 +17,8 @@ from nltk.tokenize import WhitespaceTokenizer
 import phrase, data_sources
 from get_formatter import FORMATTER
 
-MIN_SCORE_FEATURES = 3.00
-N_BIGRAMS= 1000
+MIN_SCORE= 3.00
+#N_BIGRAMS= 1000
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)-15s %(module)s] %(message)s')
 LOGGER = logging.getLogger(__name__) 
@@ -41,7 +41,7 @@ def main(collection, destination):
 
     # Train the classifier using the Text Processor
     LOGGER.info("Training Classifier")
-    classifier = processor.train_classifier(FORMATTER, N_BIGRAMS, MIN_SCORE_FEATURES)
+    classifier = processor.train_classifier(FORMATTER, MIN_SCORE, MIN_SCORE)
 
     # Serialize the classifier
     LOGGER.info("Serializing classifier")

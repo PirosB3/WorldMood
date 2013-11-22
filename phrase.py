@@ -93,7 +93,7 @@ class TextProcessor(object):
 
         bigram_measures = collocations.BigramAssocMeasures()
         finder = collocations.BigramCollocationFinder.from_words(words)
-        return BigramAnalyzer(finder.nbest(bigram_measures.likelihood_ratio, n))
+        return BigramAnalyzer(finder.above_score(bigram_measures.likelihood_ratio, n))
 
     def iterate_phrases(self):
         for sentiment in self._get_class_sentiments():
