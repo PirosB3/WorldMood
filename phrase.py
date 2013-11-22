@@ -95,15 +95,18 @@ class TextProcessor(object):
         finder = collocations.BigramCollocationFinder.from_words(words)
         return BigramAnalyzer(finder.nbest(bigram_measures.likelihood_ratio, n))
 
-    def _build_prob_dist(self, fd, cfd):
-        sentiments = self.phrases.keys()
-        for sentiment in sentiments:
+    def iterate_phrases(self):
+        for sentiment in self._get_class_sentiments():
             for phrase in self.phrases[sentiment]:
-                formatted_text = phrase.get_formatted_text(self.formatter)
-                print "Passing word for prob dist: %s" % formatted_text
-                for word in formatted_text:
-                    fd.inc(word)
-                    cfd[sentiment].inc(word)
+                yield sentiment, phrase
+
+    def _build_prob_dist(self, fd, cfd):
+        for sentiment, phrase in self.iterate_phrases():
+            formatted_text = phrase.get_formatted_text(self.formatter)
+            print "Passing word for prob dist: %s" % formatted_text
+            for word in formatted_text:
+                fd.inc(word)
+                cfd[sentiment].inc(word)
         return fd, cfd
 
     def get_most_informative_features(self, min_score):
@@ -133,25 +136,41 @@ class TextProcessor(object):
         feats = self.get_most_informative_features(min_score_features)
         bigrams = self.get_bigram_analyzer(n_bigrams)
 
-        return TrainedClassifier(self.phrases, formatter, bigrams, feats)
+        return TrainedClassifier(formatter, bigrams, feats, phrases_map=self.phrases)
 
 class TrainedClassifier(object):
     CLASSIFIER_CONSTRUCTOR = NaiveBayesClassifier
 
-    def __init__(self, phrases_map, formatter, bigrams, feats):
+    @staticmethod
+    def load(s_dir, formatter):
+        with open(os.path.join(s_dir, 'classifier.pickle'), 'r') as classifier:
+            with open(os.path.join(s_dir, 'bigrams.pickle'), 'r') as bigrams:
+                with open(os.path.join(s_dir, 'feats.pickle'), 'r') as feats:
+                    classifier = pickle.loads(classifier.read())
+                    feats = pickle.loads(feats.read())
+                    bigrams = pickle.loads(bigrams.read())
+                    return TrainedClassifier(formatter, bigrams, feats,
+                        classifier= classifier)
+
+    def __init__(self, formatter, bigrams, feats, phrases_map = None, classifier= None):
         self.formatter = formatter
         self.bigrams = bigrams
         self.feats = feats
 
-        training_set = []
-        for sentiment, phrases in phrases_map.iteritems():
-            for p in phrases:
-                vec = self._phrase_to_feature_vector(p)
-                print "Passing word for feature vector composition: %s" % vec
-                if vec:
-                    training_set.append((vec, sentiment))
+        if phrases_map:
+            training_set = []
+            for sentiment, phrases in phrases_map.iteritems():
+                for p in phrases:
+                    vec = self._phrase_to_feature_vector(p)
+                    print "Passing word for feature vector composition: %s" % vec
+                    if vec:
+                        training_set.append((vec, sentiment))
 
-        self.classifier = self.CLASSIFIER_CONSTRUCTOR.train(training_set)
+            self.classifier = self.CLASSIFIER_CONSTRUCTOR.train(training_set)
+        elif classifier:
+            self.classifier = classifier
+        else:
+            raise Exception("No classifier provided")
 
     def _phrase_to_feature_vector(self, phrase):
         res = phrase.get_features(self.formatter, self.feats, self.bigrams)
