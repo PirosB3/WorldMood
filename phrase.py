@@ -172,11 +172,17 @@ class TrainedClassifier(object):
         else:
             raise Exception("No classifier provided")
 
+    def get_components(self):
+        return self.bigrams, self.feats
+
     def _phrase_to_feature_vector(self, phrase):
         res = phrase.get_features(self.formatter, self.feats, self.bigrams)
         if len(res.keys()) < 1:
             return None
         return res
+
+    def batch_classify(self, phrases):
+        return map(self.classify, phrases)
 
     def classify(self, phrase):
         feature_vector = phrase.get_features(self.formatter, self.feats,
