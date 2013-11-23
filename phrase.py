@@ -147,7 +147,8 @@ class TextProcessor(object):
         feats = self.get_most_informative_features(min_score_features)
         bigrams = self.get_bigram_analyzer(n_bigrams)
 
-        return TrainedClassifier(formatter, bigrams, feats, phrases_map=self.phrases)
+        return TrainedClassifier(formatter, bigrams, feats,
+                            phrases_iterator=self.phrases_it)
 
 class TrainedClassifier(object):
     CLASSIFIER_CONSTRUCTOR = NaiveBayesClassifier
