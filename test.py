@@ -255,3 +255,35 @@ class TrainedClassifierTestCase(unittest.TestCase):
         self.assertEqual(['/tmp/test-classifier/bigrams.pickle',
             '/tmp/test-classifier/feats.pickle',
             '/tmp/test-classifier/classifier.pickle'], files_written)
+
+class SmartPhraseIteratorTestCase(unittest.TestCase):
+    def _generate_n_phrases(self, n):
+        return map(lambda x: phrase.Phrase("Phrase N%s" % x, word_tokenize), xrange(n))
+
+    def setUp(self):
+        self.phrases = {
+            'positive': self._generate_n_phrases(2),
+            'negative': self._generate_n_phrases(5)
+        }
+        self.smi = phrase.SmartPhraseIterator(self.phrases)
+
+        self.formatter= mock.MagicMock()
+        self.formatter.process_word.side_effect = lambda x: x
+
+    def test_can_iterate_formatted_text(self):
+
+        for text, sentiment in self.smi.iterate_formatted_text(self.formatter):
+            self.assertTrue(sentiment in ['positive', 'negative'])
+            self.assertTrue(isinstance(text, list))
+
+    def test_can_iterate_features(self):
+        formatter= mock.MagicMock()
+        formatter.process_word.side_effect = lambda x: x
+
+        for text, sentiment in self.smi.iterate_features(formatter):
+            self.assertTrue(sentiment in ['positive', 'negative'])
+            self.assertTrue(isinstance(text, dict))
+
+    def test_can_get_formatted_text_words(self):
+        for w, sentiment in self.smi.iterate_formatted_words(self.formatter):
+            self.assertTrue(isinstance(w, str))

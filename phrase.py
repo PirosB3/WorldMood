@@ -8,6 +8,29 @@ from nltk.metrics import BigramAssocMeasures
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk import collocations
 
+class SmartPhraseIterator(object):
+    def __init__(self, phrases):
+        self.phrases = phrases
+
+    def iterate_formatted_text(self, formatter):
+        for sentiment, s_phrases in self.phrases.iteritems():
+            for phrase in s_phrases:
+                yield phrase.get_formatted_text(formatter), sentiment
+
+    def iterate_formatted_words(self, formatter, exc_sentiment=False):
+        for text, sentiment in self.iterate_formatted_text(formatter):
+            for word in text:
+                if exc_sentiment:
+                    yield word
+                else:
+                    yield word, sentiment
+
+    def iterate_features(self, formatter, n_features=None, bigram_analyzer=None):
+        for sentiment, s_phrases in self.phrases.iteritems():
+            for phrase in s_phrases:
+                feats = phrase.get_features(formatter, n_features, bigram_analyzer)
+                yield feats, sentiment
+
 class Word(object):
     def __init__(self, word):
         self.word = word
@@ -76,37 +99,25 @@ class Phrase(object):
 
 class TextProcessor(object):
     def __init__(self, phrases, formatter):
-        self.phrases = phrases
         self.formatter = formatter
+
+        self.phrases = phrases
+        self.phrases_it = SmartPhraseIterator(self.phrases)
 
     def _get_class_sentiments(self):
         return self.phrases.keys()
 
     def get_bigram_analyzer(self, n):
-        words = []
-        for sentiment in self._get_class_sentiments():
-            formatted_words_in_phrases = [p.get_formatted_text(self.formatter)
-                for p in self.phrases[sentiment]]
-            print "Passing word for bigram analyzer: %s" % formatted_words_in_phrases
-            for word in formatted_words_in_phrases:
-                words.extend(word)
+        words = self.phrases_it.iterate_formatted_words(self.formatter, False)
 
         bigram_measures = collocations.BigramAssocMeasures()
         finder = collocations.BigramCollocationFinder.from_words(words)
         return BigramAnalyzer(finder.above_score(bigram_measures.likelihood_ratio, n))
 
-    def iterate_phrases(self):
-        for sentiment in self._get_class_sentiments():
-            for phrase in self.phrases[sentiment]:
-                yield sentiment, phrase
-
     def _build_prob_dist(self, fd, cfd):
-        for sentiment, phrase in self.iterate_phrases():
-            formatted_text = phrase.get_formatted_text(self.formatter)
-            print "Passing word for prob dist: %s" % formatted_text
-            for word in formatted_text:
-                fd.inc(word)
-                cfd[sentiment].inc(word)
+        for word, sentiment in self.phrases_it.iterate_formatted_words(self.formatter):
+            fd.inc(word)
+            cfd[sentiment].inc(word)
         return fd, cfd
 
     def get_most_informative_features(self, min_score):
@@ -152,20 +163,14 @@ class TrainedClassifier(object):
                     return TrainedClassifier(formatter, bigrams, feats,
                         classifier= classifier)
 
-    def __init__(self, formatter, bigrams, feats, phrases_map = None, classifier= None):
+    def __init__(self, formatter, bigrams, feats, phrases_iterator = None, classifier= None):
         self.formatter = formatter
         self.bigrams = bigrams
         self.feats = feats
 
-        if phrases_map:
-            training_set = []
-            for sentiment, phrases in phrases_map.iteritems():
-                for p in phrases:
-                    vec = self._phrase_to_feature_vector(p)
-                    print "Passing word for feature vector composition: %s" % vec
-                    if vec:
-                        training_set.append((vec, sentiment))
-
+        if phrases_iterator:
+            training_set = phrases_iterator.iterate_features(self.formatter, self.feats,
+                                                        self.bigrams)
             self.classifier = self.CLASSIFIER_CONSTRUCTOR.train(training_set)
         elif classifier:
             self.classifier = classifier
