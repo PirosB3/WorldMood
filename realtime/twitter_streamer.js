@@ -5,13 +5,6 @@ var util = require("util");
 var Twit = require('twit');
 var _ = require("underscore");
 
-KEYS = {
-		consumer_key:        'tIPFMyYowULdaxhXAUdw'
-	, consumer_secret:     '8KmoOxQfJAHCoEZ9lTdxvbTaFepat3ipH1vlUofQY'
-	, access_token:        '79504968-C9PQG5G1BFCESQI4axGi6XC4AlfiddiImg2HQbhqt'
-	, access_token_secret: 'm2XjR91L1iFiGfh4W8DjbgV9DkyITxHxtKUSaZM6Sw'
-}
-
 var createHash = function(text) {
 	var sum = crypto.createHash('md5');
 	sum.update(text);

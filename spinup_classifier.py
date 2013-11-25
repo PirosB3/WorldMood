@@ -41,8 +41,12 @@ def main(path):
             p= make_phrase(data['text'])
 
             result = prob_dist_to_dict(classifier.prob_classify(p))
-            if result['probs'][result['result']] > 0.8:
-                LOGGER.info("[%s] %s" % (result['result'], data['text']))
+            if not result:
+                socket.send('')
+                continue
+
+            #if result['probs'][result['result']] > 0.8:
+            LOGGER.info("[%s] %s" % (result['result'], data['text']))
             socket.send(json.dumps(result))
 
         except zmq.error.ZMQError as e:
