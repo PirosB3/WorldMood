@@ -58,12 +58,4 @@ TwitterStreamer.prototype.setTrack = function(keyword) {
 	this.currentStream.on('tweet', _.bind(this.emitTweet, this));
 }
 
-function main() {
-	var streamer = new TwitterStreamer(KEYS);
-	streamer.setTrack('iphone');
-	streamer.on('tweet', function(t) {
-		console.log(t);
-	});
-}
-
-main();
+exports.TwitterStreamer = TwitterStreamer;

@@ -1,26 +1,16 @@
 import argparse
-import collections
-import csv
 import functools
-import logging
 import os
-import pickle
-import random
 
-import nltk
-import numpy
 import redis
-from nltk.classify import NaiveBayesClassifier
-from nltk.corpus import stopwords
 from nltk.tokenize import WhitespaceTokenizer
 
 import phrase, data_sources
 from get_formatter import FORMATTER
+from get_logger import LOGGER
 
 MIN_SCORE= 3.00
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)-15s %(module)s] %(message)s')
-LOGGER = logging.getLogger(__name__) 
 
 TOKENIZER = WhitespaceTokenizer().tokenize
 

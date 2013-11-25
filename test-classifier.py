@@ -11,9 +11,7 @@ from nltk.tokenize import WhitespaceTokenizer
 
 import phrase, data_sources
 from get_formatter import FORMATTER
-
-logging.basicConfig(level=logging.INFO, format='[%(asctime)-15s %(module)s] %(message)s')
-LOGGER = logging.getLogger(__name__) 
+from get_logger import LOGGER
 
 TOKENIZER = WhitespaceTokenizer().tokenize
 
@@ -22,7 +20,6 @@ def main(path, against):
 
     LOGGER.info("Loading classifier")
     classifier = phrase.TrainedClassifier.load(path, FORMATTER)
-    bigrams, feats = classifier.get_components()
 
     LOGGER.info("Loading testing data")
     make_phrase = functools.partial(phrase.Phrase, tokenizer=TOKENIZER)
