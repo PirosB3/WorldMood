@@ -1,0 +1,12 @@
+doctype 5
+html(ng-app='main')
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    meta(name='viewport', context='width=device-width, initial-scale=1.0')
+    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js')
+    script(src='//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js')
+    script(src='/javascripts/main.js')
+  body(ng-controller="RootController")
+    block content
