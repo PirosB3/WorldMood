@@ -13,6 +13,7 @@ app.factory('getWebSocket', function($q) {
 app.controller('MainController', function($scope, $rootScope) {
 	$rootScope.$on('newSentimentClassified', function(event, data) {
 		$scope.$apply(function() {
+			console.log(data.probs);
 			$scope.result = data.result;
 		});
 		
