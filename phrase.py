@@ -69,7 +69,6 @@ class BigramAnalyzer(object):
 
 class Phrase(object):
     def __init__(self, text, tokenizer):
-        self.tokenizer = tokenizer
         self.words = [Word(w) for w in tokenizer(text)]
 
     def get_text(self):
@@ -107,9 +106,7 @@ class TextProcessor(object):
     def _get_class_sentiments(self):
         return self.phrases.keys()
 
-    def get_bigram_analyzer(self, n):
-        words = self.phrases_it.iterate_formatted_words(self.formatter, False)
-
+    def get_bigram_analyzer(self, n, words):
         bigram_measures = collocations.BigramAssocMeasures()
         finder = collocations.BigramCollocationFinder.from_words(words)
         return BigramAnalyzer(finder.above_score(bigram_measures.likelihood_ratio, n))
@@ -120,9 +117,8 @@ class TextProcessor(object):
             cfd[sentiment].inc(word)
         return fd, cfd
 
-    def get_most_informative_features(self, min_score):
-        freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
-            ConditionalFreqDist())
+    def _get_most_informative_features(self, min_score,
+                            freq_dist, cond_freq_dist):
         res = []
         for word, total_freq in freq_dist.iteritems():
             score = 0
@@ -144,8 +140,11 @@ class TextProcessor(object):
         return result_res
 
     def train_classifier(self, formatter, n_bigrams, min_score_features):
-        feats = self.get_most_informative_features(min_score_features)
-        bigrams = self.get_bigram_analyzer(n_bigrams)
+        freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
+                                                ConditionalFreqDist())
+        feats = self._get_most_informative_features(min_score_features, freq_dist,
+                                                                    cond_freq_dist)
+        bigrams = self.get_bigram_analyzer(n_bigrams, freq_dist.iterkeys())
 
         return TrainedClassifier(formatter, bigrams, feats,
                             phrases_iterator=self.phrases_it)
