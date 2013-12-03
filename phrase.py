@@ -1,4 +1,5 @@
 import os
+import heapq
 import pickle
 
 from collections import defaultdict
@@ -122,10 +123,15 @@ class TextProcessor(object):
             cfd[sentiment].inc(word)
         return fd, cfd
 
-    def _get_most_informative_features(self, min_score,
+    def _get_most_informative_features(self, nfeats,
                             freq_dist, cond_freq_dist):
 
         LOGGER.info("Getting most informative fearures")
+
+        LOGGER.info("Building Heap")
+        heap = []
+        smallest_score = -1
+
         res = []
         for word, total_freq in freq_dist.iteritems():
             score = 0
@@ -135,16 +141,20 @@ class TextProcessor(object):
                     (total_freq, cond_freq_dist[sentiment].N()),
                     freq_dist.N()
                 )
-            res.append((score, word))
-        
-        order_res = sorted(res, reverse=True)
-        result_res = []
-        for score, word in order_res:
-            if score >= min_score:
-                result_res.append(word)
-            else:
-                break
-        return result_res
+
+                if len(heap) < nfeats:
+                    heapq.heappush(heap, (score, word))
+                    if score < smallest_score:
+                        smallest_score = score
+                elif score > smallest_score:
+                    smallest_score = score
+                    heapq.heapreplace(heap, (score, word))
+                    LOGGER.info("Smallest score has increased to: %s" % smallest_score)
+
+        sorted_res = []
+        while heap:
+            sorted_res.insert(0, heapq.heappop(heap))
+        return sorted_res
 
     def train_classifier(self, formatter, n_bigrams, n_feats):
         freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
