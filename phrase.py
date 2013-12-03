@@ -8,6 +8,9 @@ from nltk.metrics import BigramAssocMeasures
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk import collocations
 
+
+from get_logger import LOGGER
+
 class SmartPhraseIterator(object):
     def __init__(self, phrases):
         self.phrases = phrases
@@ -107,11 +110,13 @@ class TextProcessor(object):
         return self.phrases.keys()
 
     def get_bigram_analyzer(self, n, words):
+        LOGGER.info("Building Bigram Analyzer")
         bigram_measures = collocations.BigramAssocMeasures()
         finder = collocations.BigramCollocationFinder.from_words(words)
         return BigramAnalyzer(finder.above_score(bigram_measures.likelihood_ratio, n))
 
     def _build_prob_dist(self, fd, cfd):
+        LOGGER.info("Building frequency distribution")
         for word, sentiment in self.phrases_it.iterate_formatted_words(self.formatter):
             fd.inc(word)
             cfd[sentiment].inc(word)
@@ -119,6 +124,8 @@ class TextProcessor(object):
 
     def _get_most_informative_features(self, min_score,
                             freq_dist, cond_freq_dist):
+
+        LOGGER.info("Getting most informative fearures")
         res = []
         for word, total_freq in freq_dist.iteritems():
             score = 0
@@ -139,10 +146,10 @@ class TextProcessor(object):
                 break
         return result_res
 
-    def train_classifier(self, formatter, n_bigrams, min_score_features):
+    def train_classifier(self, formatter, n_bigrams, n_feats):
         freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
                                                 ConditionalFreqDist())
-        feats = self._get_most_informative_features(min_score_features, freq_dist,
+        feats = self._get_most_informative_features(n_feats, freq_dist,
                                                                     cond_freq_dist)
         bigrams = self.get_bigram_analyzer(n_bigrams, freq_dist.iterkeys())
 
