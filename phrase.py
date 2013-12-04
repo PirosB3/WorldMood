@@ -153,7 +153,8 @@ class TextProcessor(object):
 
         sorted_res = []
         while heap:
-            sorted_res.insert(0, heapq.heappop(heap))
+            score, word = heapq.heappop(heap)
+            sorted_res.insert(0, word)
         return sorted_res
 
     def train_classifier(self, formatter, n_bigrams, n_feats):
@@ -163,6 +164,7 @@ class TextProcessor(object):
                                                                     cond_freq_dist)
         bigrams = self.get_bigram_analyzer(n_bigrams, freq_dist.iterkeys())
 
+        LOGGER.info("Building TrainedClassifier")
         return TrainedClassifier(formatter, bigrams, feats,
                             phrases_iterator=self.phrases_it)
 
