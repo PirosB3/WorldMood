@@ -1,4 +1,5 @@
 import os
+import heapq
 import pickle
 
 from collections import defaultdict
@@ -7,6 +8,9 @@ from nltk.classify import NaiveBayesClassifier
 from nltk.metrics import BigramAssocMeasures
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk import collocations
+
+
+from get_logger import LOGGER
 
 class SmartPhraseIterator(object):
     def __init__(self, phrases):
@@ -69,7 +73,6 @@ class BigramAnalyzer(object):
 
 class Phrase(object):
     def __init__(self, text, tokenizer):
-        self.tokenizer = tokenizer
         self.words = [Word(w) for w in tokenizer(text)]
 
     def get_text(self):
@@ -107,22 +110,28 @@ class TextProcessor(object):
     def _get_class_sentiments(self):
         return self.phrases.keys()
 
-    def get_bigram_analyzer(self, n):
-        words = self.phrases_it.iterate_formatted_words(self.formatter, False)
-
+    def get_bigram_analyzer(self, n, words):
+        LOGGER.info("Building Bigram Analyzer")
         bigram_measures = collocations.BigramAssocMeasures()
         finder = collocations.BigramCollocationFinder.from_words(words)
         return BigramAnalyzer(finder.above_score(bigram_measures.likelihood_ratio, n))
 
     def _build_prob_dist(self, fd, cfd):
+        LOGGER.info("Building frequency distribution")
         for word, sentiment in self.phrases_it.iterate_formatted_words(self.formatter):
             fd.inc(word)
             cfd[sentiment].inc(word)
         return fd, cfd
 
-    def get_most_informative_features(self, min_score):
-        freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
-            ConditionalFreqDist())
+    def _get_most_informative_features(self, nfeats,
+                            freq_dist, cond_freq_dist):
+
+        LOGGER.info("Getting most informative fearures")
+
+        LOGGER.info("Building Heap")
+        heap = []
+        smallest_score = -1
+
         res = []
         for word, total_freq in freq_dist.iteritems():
             score = 0
@@ -132,21 +141,30 @@ class TextProcessor(object):
                     (total_freq, cond_freq_dist[sentiment].N()),
                     freq_dist.N()
                 )
-            res.append((score, word))
-        
-        order_res = sorted(res, reverse=True)
-        result_res = []
-        for score, word in order_res:
-            if score >= min_score:
-                result_res.append(word)
-            else:
-                break
-        return result_res
 
-    def train_classifier(self, formatter, n_bigrams, min_score_features):
-        feats = self.get_most_informative_features(min_score_features)
-        bigrams = self.get_bigram_analyzer(n_bigrams)
+                if len(heap) < nfeats:
+                    heapq.heappush(heap, (score, word))
+                    if score < smallest_score:
+                        smallest_score = score
+                elif score > smallest_score:
+                    smallest_score = score
+                    heapq.heapreplace(heap, (score, word))
+                    LOGGER.info("Smallest score has increased to: %s" % smallest_score)
 
+        sorted_res = []
+        while heap:
+            score, word = heapq.heappop(heap)
+            sorted_res.insert(0, word)
+        return sorted_res
+
+    def train_classifier(self, formatter, n_bigrams, n_feats):
+        freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
+                                                ConditionalFreqDist())
+        feats = self._get_most_informative_features(n_feats, freq_dist,
+                                                                    cond_freq_dist)
+        bigrams = self.get_bigram_analyzer(n_bigrams, freq_dist.iterkeys())
+
+        LOGGER.info("Building TrainedClassifier")
         return TrainedClassifier(formatter, bigrams, feats,
                             phrases_iterator=self.phrases_it)
 
