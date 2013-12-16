@@ -91,7 +91,7 @@ class Phrase(object):
             # Single features
             can_add = n_features == None or word in n_features
             if can_add:
-                res['has(%s)' % word] = True
+               res['has(%s)' % word] = True
 
         if bigram_analyzer:
             bigrams = bigram_analyzer.scan_features_for_bigrams(formatted_text)
@@ -157,15 +157,18 @@ class TextProcessor(object):
             sorted_res.insert(0, word)
         return sorted_res
 
-    def train_classifier(self, formatter, n_bigrams, n_feats):
+    def train_classifier(self, formatter, n_bigrams, n_feats, meta= {}):
         freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
                                                 ConditionalFreqDist())
         feats = self._get_most_informative_features(n_feats, freq_dist,
                                                                     cond_freq_dist)
         bigrams = self.get_bigram_analyzer(n_bigrams, freq_dist.iterkeys())
 
+        meta['n_bigrams'] = n_bigrams
+        meta['n_feats'] = n_feats
+
         LOGGER.info("Building TrainedClassifier")
-        return TrainedClassifier(formatter, bigrams, feats,
+        return TrainedClassifier(formatter, bigrams, feats, meta,
                             phrases_iterator=self.phrases_it)
 
 class TrainedClassifier(object):
@@ -176,16 +179,19 @@ class TrainedClassifier(object):
         with open(os.path.join(s_dir, 'classifier.pickle'), 'r') as classifier:
             with open(os.path.join(s_dir, 'bigrams.pickle'), 'r') as bigrams:
                 with open(os.path.join(s_dir, 'feats.pickle'), 'r') as feats:
-                    classifier = pickle.loads(classifier.read())
-                    feats = pickle.loads(feats.read())
-                    bigrams = pickle.loads(bigrams.read())
-                    return TrainedClassifier(formatter, bigrams, feats,
-                        classifier= classifier)
+                    with open(os.path.join(s_dir, 'meta.pickle'), 'r') as meta:
+                        classifier = pickle.loads(classifier.read())
+                        feats = pickle.loads(feats.read())
+                        bigrams = pickle.loads(bigrams.read())
+                        meta = pickle.loads(meta.read())
+                        return TrainedClassifier(formatter, bigrams, feats,
+                                                meta, classifier=classifier)
 
-    def __init__(self, formatter, bigrams, feats, phrases_iterator = None, classifier= None):
+    def __init__(self, formatter, bigrams, feats, meta, phrases_iterator = None, classifier= None):
         self.formatter = formatter
         self.bigrams = bigrams
         self.feats = feats
+        self.meta = meta
 
         if phrases_iterator:
             training_set = phrases_iterator.iterate_features(self.formatter, self.feats,
@@ -226,6 +232,7 @@ class TrainedClassifier(object):
         to_write = {
             os.path.join(s_dir, 'classifier.pickle'): self.classifier,
             os.path.join(s_dir, 'bigrams.pickle'): self.bigrams,
+            os.path.join(s_dir, 'meta.pickle'): self.meta,
             os.path.join(s_dir, 'feats.pickle'): self.feats
         }
         for path, obj in to_write.iteritems():

@@ -233,9 +233,10 @@ class TrainedClassifierTestCase(unittest.TestCase):
         self.formatter = mock.MagicMock()
         self.bigrams = mock.MagicMock()
         self.feats = mock.MagicMock()
+        self.meta = mock.MagicMock()
         self.phrases = mock.MagicMock()
-        self.cls = phrase.TrainedClassifier(self.phrases, self.formatter, self.bigrams,
-            self.feats)
+        self.cls = phrase.TrainedClassifier(self.formatter, self.bigrams,
+                                            self.feats, self.meta, self.phrases)
 
     def test_can_decompose(self):
         p = mock.MagicMock()
@@ -252,9 +253,12 @@ class TrainedClassifierTestCase(unittest.TestCase):
         self.cls.serialize('/tmp/test-classifier/', serializer=s, write_function=w)
 
         files_written = map(lambda x: x[0][0], w.call_args_list)
-        self.assertEqual(['/tmp/test-classifier/bigrams.pickle',
+        calls = ['/tmp/test-classifier/bigrams.pickle',
+            '/tmp/test-classifier/meta.pickle',
             '/tmp/test-classifier/feats.pickle',
-            '/tmp/test-classifier/classifier.pickle'], files_written)
+            '/tmp/test-classifier/classifier.pickle']
+        for c in calls:
+            self.assertTrue(c in files_written)
 
 class SmartPhraseIteratorTestCase(unittest.TestCase):
     def _generate_n_phrases(self, n):

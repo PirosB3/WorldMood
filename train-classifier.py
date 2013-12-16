@@ -37,8 +37,11 @@ def main(collection, destination, nfeats, nbigrams):
     processor = phrase.TextProcessor(phrases, FORMATTER)
 
     # Train the classifier using the Text Processor
+    meta = {
+        'corpus': collection
+    }
     LOGGER.info("Training Classifier")
-    classifier = processor.train_classifier(FORMATTER, nbigrams, nfeats)
+    classifier = processor.train_classifier(FORMATTER, nbigrams, nfeats, meta)
 
     # Serialize the classifier
     LOGGER.info("Serializing classifier")
