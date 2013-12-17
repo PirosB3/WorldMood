@@ -6,8 +6,6 @@ import nltk
 import numpy
 import pymongo
 import redis
-from nltk.classify import NaiveBayesClassifier
-from nltk.corpus import stopwords
 from nltk.tokenize import WhitespaceTokenizer
 
 import phrase, data_sources

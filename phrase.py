@@ -4,12 +4,13 @@ import md5
 import pickle
 
 from collections import defaultdict
+from functools import partial
 
-from nltk.classify import NaiveBayesClassifier
+from nltk.classify import NaiveBayesClassifier, SklearnClassifier, MaxentClassifier
 from nltk.metrics import BigramAssocMeasures
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk import collocations
-
+from sklearn.svm import LinearSVC
 
 from get_logger import LOGGER
 
@@ -173,7 +174,11 @@ class TextProcessor(object):
                             phrases_iterator=self.phrases_it)
 
 class TrainedClassifier(object):
-    CLASSIFIER_CONSTRUCTOR = NaiveBayesClassifier
+    CLASSIFIERS = {
+        'NaiveBayes': NaiveBayesClassifier.train,
+        'SVM': SklearnClassifier(LinearSVC()).train,
+        'Maxent': partial(MaxentClassifier.train, algorithm='iis')
+    }
 
     @staticmethod
     def load(s_dir, formatter):
@@ -197,7 +202,7 @@ class TrainedClassifier(object):
         if phrases_iterator:
             training_set = phrases_iterator.iterate_features(self.formatter, self.feats,
                                                         self.bigrams)
-            self.classifier = self.CLASSIFIER_CONSTRUCTOR.train(training_set)
+            self.classifier = self.CLASSIFIERS[self.meta['classifier_type']](training_set)
         elif classifier:
             self.classifier = classifier
         else:

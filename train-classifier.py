@@ -17,13 +17,13 @@ def generate_path_for_classifier(*args):
     name = '-'.join(map(str, args))
     return ''.join([root_path, name, '/'])
 
-def main(collection, destination, nfeats, nbigrams):
+def main(collection, destination, nfeats, nbigrams, classifier_type):
     LOGGER.info("Started classifier")
     if not destination:
-        destination = generate_path_for_classifier(collection, nfeats, nbigrams)
+        destination = generate_path_for_classifier(collection, nfeats, nbigrams,
+                                                classifier_type)
     LOGGER.info("Classifier will be saved in: %s" % destination)
-
-    LOGGER.info("Training with %s feats and %s bigrams" % (nfeats, nbigrams))
+    LOGGER.info("Training a %s classifier with %s feats and %s bigrams" % (classifier_type, nfeats, nbigrams))
 
     # Get training data using data source
     LOGGER.info("Building datasource")
@@ -38,7 +38,8 @@ def main(collection, destination, nfeats, nbigrams):
 
     # Train the classifier using the Text Processor
     meta = {
-        'train_corpus': collection
+        'train_corpus': collection,
+        'classifier_type': classifier_type
     }
     LOGGER.info("Training Classifier")
     classifier = processor.train_classifier(FORMATTER, nbigrams, nfeats, meta)
@@ -57,6 +58,7 @@ if __name__ == '__main__':
     parser.add_argument('--destination', required=False, type=str, help='Destination directory')
     parser.add_argument('--feats', type=int, default=10000, help='Number of informative features')
     parser.add_argument('--bigrams', type=int, default=3000, help='Number of informative bigrams')
+    parser.add_argument('--classifier', type=str, default='NaiveBayes', help='Choose a classifier')
 
     args = parser.parse_args()
-    main(args.collection, args.destination, args.feats, args.bigrams)
+    main(args.collection, args.destination, args.feats, args.bigrams, args.classifier)
