@@ -1,5 +1,6 @@
 import os
 import heapq
+import md5
 import pickle
 
 from collections import defaultdict
@@ -202,6 +203,9 @@ class TrainedClassifier(object):
         else:
             raise Exception("No classifier provided")
 
+    def show_most_informative_features(self, *args, **kwargs):
+        return self.classifier.show_most_informative_features(*args, **kwargs)
+
     def get_components(self):
         return self.bigrams, self.feats
 
@@ -227,6 +231,9 @@ class TrainedClassifier(object):
         if feature_vector:
             return self.classifier.prob_classify(feature_vector)
         return None
+
+    def get_uid(self):
+        return md5.md5(str(self.meta)).hexdigest()
 
     def serialize(self, s_dir, serializer=pickle, write_function=open):
         to_write = {

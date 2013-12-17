@@ -38,7 +38,7 @@ def main(collection, destination, nfeats, nbigrams):
 
     # Train the classifier using the Text Processor
     meta = {
-        'corpus': collection
+        'train_corpus': collection
     }
     LOGGER.info("Training Classifier")
     classifier = processor.train_classifier(FORMATTER, nbigrams, nfeats, meta)
