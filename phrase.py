@@ -177,7 +177,7 @@ class TrainedClassifier(object):
     CLASSIFIERS = {
         'NaiveBayes': NaiveBayesClassifier.train,
         'SVM': SklearnClassifier(LinearSVC()).train,
-        'Maxent': partial(MaxentClassifier.train, algorithm='iis')
+        'Maxent': lambda d: MaxentClassifier.train(list(d), algorithm='iis')
     }
 
     @staticmethod
