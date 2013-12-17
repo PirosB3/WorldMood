@@ -176,7 +176,7 @@ class TextProcessor(object):
 class TrainedClassifier(object):
     CLASSIFIERS = {
         'NaiveBayes': NaiveBayesClassifier.train,
-        'SVM': SklearnClassifier(LinearSVC()).train,
+        'SVM': lambda d: SklearnClassifier(LinearSVC()).train(list(d)),
         'Maxent': lambda d: MaxentClassifier.train(list(d), algorithm='iis')
     }
 

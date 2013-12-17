@@ -32,7 +32,10 @@ def main(path, against, nodb):
         for p in phrases:
             test_data.append((p, sentiment))
 
-    classifier.show_most_informative_features()
+    try:
+        classifier.show_most_informative_features()
+    except AttributeError:
+        pass
     accuracy = nltk.classify.util.accuracy(classifier, test_data)
     LOGGER.info("Accuracy is: %s" % accuracy)
 
