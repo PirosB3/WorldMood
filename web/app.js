@@ -88,6 +88,7 @@ sock.on('message', function(msg) {
 streamer.on('tweet', function(t) {
   text = t['text'];
   if (text) {
+    console.log("Sending new term..");
     sock.send(JSON.stringify({
       text: text,
       user: t['user']

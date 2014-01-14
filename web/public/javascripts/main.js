@@ -13,7 +13,6 @@ app.factory('getWebSocket', function($q) {
 app.controller('MainController', function($scope, $rootScope) {
 	$rootScope.$on('newSentimentClassified', function(event, data) {
 		$scope.$apply(function() {
-			console.log(data.probs);
 			$scope.result = data.result;
 		});
 		
@@ -22,7 +21,7 @@ app.controller('MainController', function($scope, $rootScope) {
 	$scope.processPhrase = function() {
 		var p = $scope.phrase;
 		if (p) {
-			$rootScope.$emit('newPhraseReceived', p);
+			$rootScope.$emit('trackNewTerm', p);
 		}
 	}
 
@@ -36,11 +35,13 @@ app.controller('RootController', function($rootScope, getWebSocket) {
 	getWebSocket.then(function(ws) {
 		ws.onmessage = function(msg) {
 			var data = JSON.parse(msg.data)
-			$rootScope.$emit('newSentimentClassified', data);
+		  console.log(data);
+			//$rootScope.$emit('newSentimentClassified', data);
 		}
-		$rootScope.$on('newPhraseReceived', function(event, text) {
-			ws.send(JSON.stringify({ classifyText: text }));
+		$rootScope.$on('trackNewTerm', function(event, text) {
+			ws.send(JSON.stringify({ trackNewTerm: text }));
 		});
+		//ws.send(JSON.stringify({ trackNewTerm: 'ipad' }));
 	});
 
 })
