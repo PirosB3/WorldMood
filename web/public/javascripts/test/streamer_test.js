@@ -34,5 +34,19 @@ define(['streamer'], function(Streamer) {
             expect(spy).toHaveBeenCalled();
             expect(spy.argsForCall[0][0].hello).toEqual('world');
         });
+
+        it('should be able to send a message', function() {
+            var ws = { send: jasmine.createSpy() };
+            var def = $.Deferred();
+            def.resolve(ws);
+            spyOn(Streamer.prototype, '_getWebSocket').andReturn(def.promise());
+
+            // Create new streamer
+            var s = new Streamer({ vent: vent });
+
+            // Set a spy on newTermClassified
+            vent.trigger('streamer:sendMessage', { message: 'changeTopic', value: 'pink floyd' });
+            expect(ws.send).toHaveBeenCalled();
+        });
     });
 });
