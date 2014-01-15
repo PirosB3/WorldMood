@@ -53,47 +53,47 @@ console.log('WebSockets server listening on port ' + wsPort);
 
 //  WEBSOCKETS
 wss.on('connection', function(ws) {
-	ws.on('message', function(msg) {
-		obj = JSON.parse(msg);
-    console.log(obj);
+    ws.on('message', function(msg) {
+	obj = JSON.parse(msg);
+	console.log(obj);
 
-    // Classify a raw phrase
-		if (obj.classifyText) {
-			sock.send(JSON.stringify({ text: obj.classifyText }));
+	// Classify a raw phrase
+	if (obj.classifyText) {
+	    sock.send(JSON.stringify({ text: obj.classifyText }));
 
-    // Start tracking a new term
-		} else if(obj.trackNewTerm) {
-      streamer.setTrack(obj.trackNewTerm);
-    }
-	});
+	    // Start tracking a new term
+	} else if(obj.trackNewTerm) {
+	    streamer.setTrack(obj.trackNewTerm);
+	}
+    });
 });
 
 // ZEROMQ
 sock.on('message', function(msg) {
-	try {
-		var data = JSON.parse(msg.toString());
-    data['message'] = 'newTermClassified';
-    
-    // Emit to all websockets the new data
-		wss.clients.forEach(function(ws) {
-			ws.send(JSON.stringify(data));
-		});
+    try {
+	var data = JSON.parse(msg.toString());
+	data['message'] = 'newTermClassified';
 
-	} catch(e) {
-		console.log(e);
-	}
+	// Emit to all websockets the new data
+	wss.clients.forEach(function(ws) {
+	    ws.send(JSON.stringify(data));
+	});
+
+    } catch(e) {
+	console.log(e);
+    }
 });
 
 // TWITTER STREAMER
 streamer.on('tweet', function(t) {
-  text = t['text'];
-  if (text) {
-    console.log("Sending new term..");
-    sock.send(JSON.stringify({
-      text: text,
-      user: t['user']
-    }));
-  }
+    text = t['text'];
+    if (text) {
+	console.log("Sending new term..");
+	sock.send(JSON.stringify({
+	    text: text,
+	    user: t['user']
+	}));
+    }
 });
 
 server.listen(app.get('port'), function(){

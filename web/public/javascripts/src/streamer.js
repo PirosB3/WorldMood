@@ -10,7 +10,7 @@ define(['marionette'], function() {
             }, this));
         },
         onMessageReceived: function(msg) {
-            var data = JSON.parse(msg)
+            var data = JSON.parse(msg.data);
             this.vent.trigger('streamer:newMessage:' + data.message, data);
         },
         sendMessage: function(msg) {

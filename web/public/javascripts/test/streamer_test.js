@@ -30,7 +30,7 @@ define(['streamer'], function(Streamer) {
             var spy = jasmine.createSpy();
             vent.on('streamer:newMessage:newTermClassified', spy);
 
-            ws.onmessage(JSON.stringify({ message: 'newTermClassified', hello: 'world' }));
+            ws.onmessage({ data : JSON.stringify({ message: 'newTermClassified', hello: 'world' }) });
             expect(spy).toHaveBeenCalled();
             expect(spy.argsForCall[0][0].hello).toEqual('world');
         });
