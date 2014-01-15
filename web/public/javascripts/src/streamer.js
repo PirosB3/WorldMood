@@ -19,6 +19,12 @@ define(['marionette'], function() {
             });
         },
         _getWebSocket: function(host) {
+            var def = $.Deferred();
+            var ws = new WebSocket(host);
+            ws.onopen = function(event) {
+                def.resolve(ws);
+            }
+            return def.promise();
         }
     });
 });
