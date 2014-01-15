@@ -1,0 +1,11 @@
+.container {
+  width: 700px;
+}
+
+.positive-result {
+  color: green;
+}
+
+.negative-result {
+  color: red;
+}

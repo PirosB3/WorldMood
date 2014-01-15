@@ -1,0 +1,15 @@
+extends layout
+
+block content
+	div.container(ng-controller='MainController')
+		.row
+			.text-center
+				h1 WorldMood realitime classifier
+				p.lead Write a phrase and press Enter
+		.row
+			form(ng-submit='processPhrase();')
+				.input-group
+					.input-group-addon Phrase:
+					input.form-control(type='text', placeholder='Today has been amazing', ng-model="phrase", ng-change='clearSentiment();')
+		.row(ng-show='result')
+			p.lead.text-center(ng-class='result + \'-result\'') {{ result }}
