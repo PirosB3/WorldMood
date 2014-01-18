@@ -7,13 +7,15 @@ define(['tweetView', 'term'], function(TweetView, Term) {
         
         it('should be able to set the color and opacity level', function() {
             var t = new Term;
-            t.attributes.result = 'negative';
+            t.attributes.prediction = {
+                result: 'negative'
+            }
             spyOn(Term.prototype, 'getAccuracy').andReturn(60);
 
             var tv = new TweetView({ model: t });
             tv._setColorAndOpacity();
 
-            expect(tv.$el.css('background')).toEqual('rgba(54, 25, 25, 0.6)');
+            expect(tv.$el.css('background')).toEqual('rgba(92, 184, 92, 0.6)');
         });
     });
 });

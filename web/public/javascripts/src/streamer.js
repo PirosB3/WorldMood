@@ -4,7 +4,8 @@ define(['marionette'], function() {
             this.vent = args.vent;
             this.host = args.host;
             this.vent.on('streamer:sendMessage', this.sendMessage, this);
-            this._getWebSocket(this.host).then(_.bind(function(ws) {
+            this._ws = this._getWebSocket(this.host);
+            this._ws.then(_.bind(function(ws) {
                 this.vent.trigger('streamer:ready');
                 ws.onmessage = _.bind(this.onMessageReceived, this);
             }, this));
@@ -14,7 +15,7 @@ define(['marionette'], function() {
             this.vent.trigger('streamer:newMessage:' + data.message, data);
         },
         sendMessage: function(msg) {
-            this._getWebSocket(this.host).then(function(ws) {
+            this._ws.then(function(ws) {
                 ws.send(JSON.stringify(msg));
             });
         },

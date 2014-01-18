@@ -1,11 +1,8 @@
-.container {
-  width: 700px;
+.tweet-view .tweet-text {
+    padding-left: 0px;
 }
 
-.positive-result {
-  color: green;
-}
-
-.negative-result {
-  color: red;
+.tweet-view .tweet-text .body {
+    height: 290;
+    font-size: 12px;
 }

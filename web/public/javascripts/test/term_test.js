@@ -1,9 +1,11 @@
 var data = {
     prediction: {
-        positive: 30.0,
-        negative: 70.0
-    },
-    result: 'negative'
+        probs: {
+            positive: 30.0,
+            negative: 70.0
+        },
+        result: 'negative'
+    }
 }
 
 define(['term'], function(Term) {

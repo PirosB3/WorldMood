@@ -2,10 +2,12 @@
 var _generateData = function(pos, neg) {
     return {
         prediction: {
-            positive: pos,
-            negative: neg
+            result: 'negative',
+            probs: {
+                positive: pos,
+                negative: neg
+            }
         },
-        result: 'negative'
     }
 }
 
