@@ -34,6 +34,7 @@ TwitterStreamer.prototype.emitTweet = function(tweet) {
 			text: tweet.text,
 			keyword: this.currentKeyword
 		};
+		formattedTweet.user.profile_image_url = formattedTweet.user.profile_image_url.replace('_normal', '_bigger')
 		this.currentCache[textHash] = true;
 		this.emit('tweet', formattedTweet);
 	}
