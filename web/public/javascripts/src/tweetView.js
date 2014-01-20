@@ -1,6 +1,7 @@
-define(['marionette'], function() {
+define(['text!templates/tweetView.html', 'marionette'], function(tpl) {
     return Backbone.Marionette.ItemView.extend({
-        template: "#tweetViewTemplate",
+	className: 'tweet-view panel panel-default',
+        template: _.template(tpl),
         COLORS: {
             'negative': _.template('rgba(217, 83, 79, <%= opacity %>)'),
             'positive': _.template('rgba(92, 184, 92, <%= opacity %>)')

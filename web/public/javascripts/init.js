@@ -29,7 +29,8 @@ require.config({
         jquery: '/javascripts/libs/jquery',
         backbone: '/javascripts/libs/backbone',
         underscore: '/javascripts/libs/underscore',
-        marionette: '/javascripts/libs/backbone.marionette'
+        marionette: '/javascripts/libs/backbone.marionette',
+	text: '/javascripts/libs/text'
     }
 });
 

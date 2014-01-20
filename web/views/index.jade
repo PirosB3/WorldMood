@@ -21,19 +21,3 @@ block content
 								p.text-left Prediction: Positive
 							.col-md-6
 								p.text-right Accuracy: 0.8263
-
-	script(type='text/template', id='tweetViewTemplate')
-		.tweet-view.panel.panel-default
-			.panel-heading <%= user.screen_name %>
-			.panel-body
-				.row
-					.col-md-4
-						a.thumbnail(href='#')
-							img(src='#')
-					.tweet-text.col-md-8
-						p.body <%= text %>
-				.row
-					.col-md-6
-						p.text-left Prediction: <%= prediction.result %>
-					.col-md-6
-						p.text-right Accuracy: <%= trimmedAccuracy %>

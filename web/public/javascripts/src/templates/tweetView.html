@@ -1,0 +1,22 @@
+<div class="panel-heading"><%= user.screen_name %></div>
+<div class="panel-body">
+	<div class="row">
+		<div class="col-md-4">
+			<a href="#" class="thumbnail">
+				<img src="#">
+			</a>
+		</div>
+		<div class="tweet-text col-md-8">
+			<p class="body"><%= text %></p>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-6">
+			<p class="text-left">Prediction: <%= prediction.result %></p>
+		</div>
+		<div class="col-md-6">
+			<p class="text-right">Accuracy: <%= trimmedAccuracy %></p>
+		</div>
+
+	</div>
+</div>
