@@ -6,3 +6,4 @@ man
 include
 *.pyc
 *.rdb
+datasets
