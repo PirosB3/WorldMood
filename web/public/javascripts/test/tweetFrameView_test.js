@@ -74,10 +74,14 @@ define(['tweetFrameView', 'termCollection'], function(TweetFrameView, TermCollec
       var coll = new TermCollection;
       var tfv = new TweetFrameView({ vent: vent, queue: coll, numChilds: numChilds });
 
-      // Child expires
+      // Child expires and a new object is available
+      coll.add(data, { silent: true });
       var child = tfv.addNewChild();
       spyOn(tfv, 'getExpiredViews').andReturn([ child ]);
       spyOn(child, 'swap');
+
+      child.trigger('hasExpired');
+      expect(child.swap).toHaveBeenCalled();
     });
 
   });

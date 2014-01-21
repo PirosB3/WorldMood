@@ -15,21 +15,25 @@ define(['tweetView'], function(TweetView) {
     },
     addNewChild: function() {
       var tv = new TweetView;
+      this.listenTo(tv, 'hasExpired', this.tryReplacingExpiredViews, this);
       this.views.push(tv);
       this.addChildToDOM(tv);
       return tv;
+    },
+    tryReplacingExpiredViews: function() {
+      this.getExpiredViews().forEach(_.bind(function(e) {
+        var poppedTerm = this.options.queue.pop();
+        if (poppedTerm) {
+          e.swap(poppedTerm);
+        }
+      }, this));
     },
     newElementAdded: function() {
       if (this.views.length < this.options.numChilds) {
         var el = this.addNewChild();
         el.swap(this.options.queue.pop());
       } else {
-        this.getExpiredViews().forEach(_.bind(function(e) {
-          var poppedTerm = this.options.queue.pop();
-          if (poppedTerm) {
-            e.swap(poppedTerm);
-          }
-        }, this));
+        this.tryReplacingExpiredViews();
       }
     },
     getExpiredViews: function() {
