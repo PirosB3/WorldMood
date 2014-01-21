@@ -37,7 +37,8 @@ requirejs.config({
         jquery: '../libs/jquery',
         backbone: '../libs/backbone',
         underscore: '../libs/underscore',
-        marionette: '../libs/backbone.marionette'
+        marionette: '../libs/backbone.marionette',
+        text: '../libs/text'
     },
 
     // ask Require.js to load these files (all our tests)

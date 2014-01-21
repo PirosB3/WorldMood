@@ -16,9 +16,14 @@ module.exports = function(config) {
     files: [
       'test/test-main.js',
       {pattern: 'src/*.js', included: false},
+      {pattern: 'src/templates/*.html', included: false},
       {pattern: 'test/*.js', included: false},
       {pattern: 'libs/*.js', included: false}
     ],
+
+    preprocessors: {
+      'src/templates/*.html':[]
+    },
 
 
     // list of files to exclude

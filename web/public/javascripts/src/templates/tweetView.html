@@ -1,5 +1,10 @@
-<div class="panel-heading"><%= user.screen_name %></div>
+<div class="panel-heading">
+    <% if(hasModel) { %>
+    	<%= user.screen_name %>
+    <% } %>
+</div>
 <div class="panel-body">
+    <% if(hasModel) { %>
 	<div class="row">
 		<div class="col-md-4">
 			<a href="#" class="thumbnail">
@@ -19,4 +24,5 @@
 		</div>
 
 	</div>
+    <% } %>
 </div>
