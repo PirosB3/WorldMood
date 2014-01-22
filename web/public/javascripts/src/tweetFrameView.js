@@ -22,7 +22,7 @@ define(['tweetView', 'text!templates/tweetFrameView.html'], function(TweetView, 
       return this;
     },
     addNewChild: function() {
-      var tv = new TweetView;
+      var tv = new TweetView({ doesExpire: true });
       this.listenTo(tv, 'hasExpired', this.tryReplacingExpiredViews, this);
       this.views.push(tv);
       this.addChildToDOM(tv);
