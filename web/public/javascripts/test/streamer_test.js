@@ -35,7 +35,7 @@ define(['streamer'], function(Streamer) {
             expect(spy.argsForCall[0][0].hello).toEqual('world');
         });
 
-        it('should be able to send a message', function() {
+        xit('should be able to send a message', function() {
             var ws = { send: jasmine.createSpy() };
             var def = $.Deferred();
             def.resolve(ws);

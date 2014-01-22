@@ -76,6 +76,7 @@ define(['tweetFrameView', 'termCollection'], function(TweetFrameView, TermCollec
 
       // Child expires and a new object is available
       coll.add(data, { silent: true });
+      spyOn(tfv, 'addChildToDOM')
       var child = tfv.addNewChild();
       spyOn(tfv, 'getExpiredViews').andReturn([ child ]);
       spyOn(child, 'swap');

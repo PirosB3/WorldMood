@@ -1,10 +1,17 @@
-define(['tweetView'], function(TweetView) {
+define(['tweetView', 'text!templates/tweetFrameView.html'], function(TweetView, tpl) {
   return Backbone.Marionette.View.extend({
+    template: _.template(tpl),
+    ui: {
+      "children": ".children"
+    },
     initialize: function() {
       this.views = [];
       this.listenTo(this.options.queue, 'add', this.newElementAdded, this);
     },
     render: function() {
+      this.$el.html(this.template());
+      this.bindUIElements();
+
       var opts = this.options
       var poppedElements = _.range(0, opts['numChilds']).map(function() {
         return opts.queue.pop();
@@ -12,6 +19,7 @@ define(['tweetView'], function(TweetView) {
       _.compact(poppedElements).forEach(_.bind(function(m) {
         var el = this.addNewChild();
       }, this));
+      return this;
     },
     addNewChild: function() {
       var tv = new TweetView;
@@ -41,8 +49,10 @@ define(['tweetView'], function(TweetView) {
         return v.hasExpired();
       });
     },
-    addChildToDOM: function() {
-      
+    addChildToDOM: function(child) {
+      if (this.ui.children) {
+        this.ui.children.append(child.render().el);
+      }
     }
   });
 });

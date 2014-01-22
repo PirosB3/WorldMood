@@ -15,6 +15,9 @@ define(['text!templates/tweetView.html', 'marionette'], function(tpl) {
 	    attrs.hasModel = !!this.model;
 	    return attrs;
 	},
+        hasExpired: function() {
+          return false;
+        },
         onRender: function() {
 	    if (this.model) {
 		this.$('img').attr('src', this.model.get('user').profile_image_url);
