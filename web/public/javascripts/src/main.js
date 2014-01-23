@@ -11,7 +11,11 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'navigationView'], funct
       app.streamer = new Streamer({ vent: app.vent, host: host });
     },
     routes: {
-      "track/:query": "start"
+      "track/:query": "start",
+      '*path': 'defaultRoute'
+    },
+    defaultRoute: function() {
+      this.navigate("/track/Plymouth", {trigger: true});
     },
     start: function(query) {
       app.vent.off('streamer:newMessage:newTermClassified');
