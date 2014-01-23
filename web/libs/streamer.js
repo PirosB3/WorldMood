@@ -41,7 +41,7 @@ TwitterStreamer.prototype.emitTweet = function(tweet) {
 }
 
 TwitterStreamer.prototype.setTrack = function(keyword) {
-	if (this.currentStream) {
+	if (this.currentStream && this.currentStream.request) {
 		this.currentStream.stop();
 	}
 

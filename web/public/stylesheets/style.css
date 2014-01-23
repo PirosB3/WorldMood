@@ -10,3 +10,16 @@
 .tweet-view .panel-body {
   height: 148px;
 }
+
+.navbar {
+  border-radius: 0px;
+}
+
+.navbar-brand.worldmood-brand {
+  color: #ffffff;
+  background-color: transparent;
+}
+
+.form-group {
+  margin-right: 5px;
+}
