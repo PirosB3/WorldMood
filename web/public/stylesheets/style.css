@@ -23,3 +23,11 @@
 .form-group {
   margin-right: 5px;
 }
+
+.streamer-status.on {
+  color: green;
+}
+
+.streamer-status.off {
+  color: red;
+}

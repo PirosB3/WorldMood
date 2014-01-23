@@ -7,7 +7,26 @@ define(['text!templates/navigationView.html', 'marionette'], function(tpl) {
         'submit form': 'triggerChange'
       },
       ui: {
-        "query": "input[type='text']"
+        "query": "input[type='text']",
+        "streamerStatus": ".streamer-status",
+        "realtimeOnTemplate": "#realtime-on-tpl",
+        "realtimeOffTemplate": "#realtime-off-tpl"
+      },
+      initialize: function() {
+        this.streamerReady = false;
+        this.listenTo(app.vent, 'streamer:ready', function() {
+          this.streamerReady = true;
+          this.render();
+        });
+      },
+      onRender: function() {
+        if(this.streamerReady) {
+          this.ui.streamerStatus.html(this.ui.realtimeOnTemplate.html());
+        } else {
+          this.ui.streamerStatus.html(this.ui.realtimeOffTemplate.html());
+        }
+        this.ui.streamerStatus.removeClass(this.streamerReady ? 'off' : 'on');
+        this.ui.streamerStatus.addClass(this.streamerReady ? 'on' : 'off');
       },
       triggerChange: function(e) {
         e.preventDefault();
