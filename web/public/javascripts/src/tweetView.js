@@ -11,11 +11,18 @@ define(['text!templates/tweetView.html', 'marionette'], function(tpl) {
             'negative': _.template('rgba(217, 83, 79, <%= opacity %>)'),
             'positive': _.template('rgba(92, 184, 92, <%= opacity %>)')
         },
+        hasExpired: function() {
+          return this._expired;
+        },
         startTicking: function(t) {
           if (this._currentTick) {
             clearInterval(this._currentTick);
+          } if (this._expired) {
+            this._expired = false;
           }
           this._currentTick = setTimeout(_.bind(function() {
+            //console.log(this.cid + " has expired");
+            this._expired = true;
             this.trigger('hasExpired');
           }, this), t);
         },
@@ -28,9 +35,6 @@ define(['text!templates/tweetView.html', 'marionette'], function(tpl) {
 	    attrs.hasModel = !!this.model;
 	    return attrs;
 	},
-        hasExpired: function() {
-          return false;
-        },
         onRender: function() {
 	    if (this.model) {
 		this.$('img').attr('src', this.model.get('user').profile_image_url);
@@ -48,7 +52,7 @@ define(['text!templates/tweetView.html', 'marionette'], function(tpl) {
 	swap: function(m) {
           this.model = m;
           if (this.options.doesExpire) {
-            this.startTicking(this.model.getAccuracy() * 100);
+            this.startTicking(this.model.getAccuracy() * 10000);
           }
           this.render();
 	}

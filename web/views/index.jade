@@ -1,23 +1,9 @@
 extends layout
 
 block content
-	div.container(ng-controller='MainController')
-		.row
-			.col-md-4
-				span#placeholder
-		.row
-			.col-md-4
-				.tweet-view.panel.panel-default
-					.panel-heading PirosB3
-					.panel-body
-						.row
-							.col-md-4
-								a.thumbnail(href='#')
-									img(src='http://pbs.twimg.com/profile_images/378800000750304347/b44d034bbd988a268fb0819ae401cefe_bigger.jpeg')
-							.tweet-text.col-md-8
-								p.body \xe2\x80\x9c@KINGBeysus: Q16: New York or Los Angeles?\xe2\x80\x9d New Yawk.\xe2\x80\x9c@KINGBeysus: Q16: New York or Los Angeles?\xe2\x80\x9d New Yawk.
-						.row
-							.col-md-6
-								p.text-left Prediction: Positive
-							.col-md-6
-								p.text-right Accuracy: 0.8263
+  div.container(ng-controller='MainController')
+    .row
+      .col-md-4
+        span.tweetFrameView-placeholder
+      .col-md-8
+        span.tweetDetails-placeholder

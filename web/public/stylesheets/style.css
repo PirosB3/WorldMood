@@ -6,3 +6,7 @@
     height: 290;
     font-size: 12px;
 }
+
+.tweet-view .panel-body {
+  height: 148px;
+}

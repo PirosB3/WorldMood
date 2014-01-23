@@ -55,9 +55,11 @@ define(['tweetView', 'term'], function(TweetView, Term) {
             // New ticker has been started
             tv.startTicking(1000);
             expect(timerCallback).not.toHaveBeenCalled();
+            expect(tv.hasExpired()).toBeFalsy();
 
             jasmine.Clock.tick(1001);
             expect(timerCallback).toHaveBeenCalled();
+            expect(tv.hasExpired()).toBeTruthy();
         });
 
         it('should delete existing timer on swap', function() {
