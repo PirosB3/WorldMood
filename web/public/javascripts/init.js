@@ -30,6 +30,7 @@ require.config({
         backbone: '/javascripts/libs/backbone',
         underscore: '/javascripts/libs/underscore',
         marionette: '/javascripts/libs/backbone.marionette',
+        d3: '/javascripts/libs/d3',
 	text: '/javascripts/libs/text'
     }
 });

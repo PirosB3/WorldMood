@@ -1,5 +1,5 @@
 
-define(['streamer', 'termCollection', 'tweetFrameView', 'navigationView'], function(Streamer, TermCollection, TweetFrameView, NavigationView) {
+define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationView'], function(Streamer, TermCollection, TweetFrameView, PieView, NavigationView) {
 
   window.app = new Backbone.Marionette.Application();
 
@@ -25,6 +25,10 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'navigationView'], funct
         queue: app.queue,
         vent: app.vent,
         numChilds: 3
+      }));
+      app.tweetDetailsPlaceholder.show(new PieView({
+        queue: app.queue,
+        vent: app.vent
       }));
 
       app.vent.trigger('streamer:sendMessage', {trackNewTerm: query});
