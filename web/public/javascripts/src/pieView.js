@@ -38,6 +38,9 @@ define(['text!templates/pieView.html', 'd3', 'marionette'], function(tpl, d3) {
         .style("width", function(d) {
           return widthScale(d.value) + '.px';
         })
+        .html(function(d) {
+          return "<h3>" + d.value + "</h3>";
+        })
         .data(this.getListFromMap())
         .enter()
         .append('div')

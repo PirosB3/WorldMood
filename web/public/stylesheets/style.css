@@ -31,3 +31,9 @@
 .streamer-status.off {
   color: red;
 }
+
+.bar h3{
+  text-align: center;
+  color: white;
+  line-height: 2;
+}
