@@ -1,14 +1,16 @@
 import os
 import heapq
+import md5
 import pickle
 
 from collections import defaultdict
+from functools import partial
 
-from nltk.classify import NaiveBayesClassifier
+from nltk.classify import NaiveBayesClassifier, SklearnClassifier, MaxentClassifier
 from nltk.metrics import BigramAssocMeasures
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk import collocations
-
+from sklearn.svm import LinearSVC
 
 from get_logger import LOGGER
 
@@ -91,7 +93,7 @@ class Phrase(object):
             # Single features
             can_add = n_features == None or word in n_features
             if can_add:
-                res['has(%s)' % word] = True
+               res['has(%s)' % word] = True
 
         if bigram_analyzer:
             bigrams = bigram_analyzer.scan_features_for_bigrams(formatted_text)
@@ -157,44 +159,57 @@ class TextProcessor(object):
             sorted_res.insert(0, word)
         return sorted_res
 
-    def train_classifier(self, formatter, n_bigrams, n_feats):
+    def train_classifier(self, formatter, n_bigrams, n_feats, meta= {}):
         freq_dist, cond_freq_dist = self._build_prob_dist(FreqDist(),
                                                 ConditionalFreqDist())
         feats = self._get_most_informative_features(n_feats, freq_dist,
                                                                     cond_freq_dist)
         bigrams = self.get_bigram_analyzer(n_bigrams, freq_dist.iterkeys())
 
+        meta['n_bigrams'] = n_bigrams
+        meta['n_feats'] = n_feats
+
         LOGGER.info("Building TrainedClassifier")
-        return TrainedClassifier(formatter, bigrams, feats,
+        return TrainedClassifier(formatter, bigrams, feats, meta,
                             phrases_iterator=self.phrases_it)
 
 class TrainedClassifier(object):
-    CLASSIFIER_CONSTRUCTOR = NaiveBayesClassifier
+    CLASSIFIERS = {
+        'NaiveBayes': NaiveBayesClassifier.train,
+        'SVM': lambda d: SklearnClassifier(LinearSVC()).train(list(d)),
+        'Maxent': lambda d: MaxentClassifier.train(list(d), algorithm='iis')
+    }
 
     @staticmethod
     def load(s_dir, formatter):
         with open(os.path.join(s_dir, 'classifier.pickle'), 'r') as classifier:
             with open(os.path.join(s_dir, 'bigrams.pickle'), 'r') as bigrams:
                 with open(os.path.join(s_dir, 'feats.pickle'), 'r') as feats:
-                    classifier = pickle.loads(classifier.read())
-                    feats = pickle.loads(feats.read())
-                    bigrams = pickle.loads(bigrams.read())
-                    return TrainedClassifier(formatter, bigrams, feats,
-                        classifier= classifier)
+                    with open(os.path.join(s_dir, 'meta.pickle'), 'r') as meta:
+                        classifier = pickle.loads(classifier.read())
+                        feats = pickle.loads(feats.read())
+                        bigrams = pickle.loads(bigrams.read())
+                        meta = pickle.loads(meta.read())
+                        return TrainedClassifier(formatter, bigrams, feats,
+                                                meta, classifier=classifier)
 
-    def __init__(self, formatter, bigrams, feats, phrases_iterator = None, classifier= None):
+    def __init__(self, formatter, bigrams, feats, meta, phrases_iterator = None, classifier= None):
         self.formatter = formatter
         self.bigrams = bigrams
         self.feats = feats
+        self.meta = meta
 
         if phrases_iterator:
             training_set = phrases_iterator.iterate_features(self.formatter, self.feats,
                                                         self.bigrams)
-            self.classifier = self.CLASSIFIER_CONSTRUCTOR.train(training_set)
+            self.classifier = self.CLASSIFIERS[self.meta['classifier_type']](training_set)
         elif classifier:
             self.classifier = classifier
         else:
             raise Exception("No classifier provided")
+
+    def show_most_informative_features(self, *args, **kwargs):
+        return self.classifier.show_most_informative_features(*args, **kwargs)
 
     def get_components(self):
         return self.bigrams, self.feats
@@ -222,10 +237,14 @@ class TrainedClassifier(object):
             return self.classifier.prob_classify(feature_vector)
         return None
 
+    def get_uid(self):
+        return md5.md5(str(self.meta)).hexdigest()
+
     def serialize(self, s_dir, serializer=pickle, write_function=open):
         to_write = {
             os.path.join(s_dir, 'classifier.pickle'): self.classifier,
             os.path.join(s_dir, 'bigrams.pickle'): self.bigrams,
+            os.path.join(s_dir, 'meta.pickle'): self.meta,
             os.path.join(s_dir, 'feats.pickle'): self.feats
         }
         for path, obj in to_write.iteritems():

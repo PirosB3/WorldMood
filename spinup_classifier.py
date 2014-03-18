@@ -45,9 +45,9 @@ def main(path):
                 socket.send('')
                 continue
 
-            #if result['probs'][result['result']] > 0.8:
             LOGGER.info("[%s] %s" % (result['result'], data['text']))
-            socket.send(json.dumps(result))
+            data['prediction'] = result
+            socket.send(json.dumps(data))
 
         except zmq.error.ZMQError as e:
             LOGGER.error("Trying to recover from ZMQError crash, sending NIL")

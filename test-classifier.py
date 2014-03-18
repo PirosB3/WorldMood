@@ -4,9 +4,8 @@ import logging
 
 import nltk
 import numpy
+import pymongo
 import redis
-from nltk.classify import NaiveBayesClassifier
-from nltk.corpus import stopwords
 from nltk.tokenize import WhitespaceTokenizer
 
 import phrase, data_sources
@@ -15,7 +14,7 @@ from get_logger import LOGGER
 
 TOKENIZER = WhitespaceTokenizer().tokenize
 
-def main(path, against):
+def main(path, against, nodb):
     LOGGER.info("Started testing")
 
     LOGGER.info("Loading classifier")
@@ -33,8 +32,24 @@ def main(path, against):
         for p in phrases:
             test_data.append((p, sentiment))
 
+    try:
+        classifier.show_most_informative_features()
+    except AttributeError:
+        pass
     accuracy = nltk.classify.util.accuracy(classifier, test_data)
     LOGGER.info("Accuracy is: %s" % accuracy)
+
+    if not nodb:
+        conn = pymongo.Connection()
+        db = conn['worldmood']
+        coll = db['statistics']
+
+        s = classifier.meta
+        s['accuracy'] = accuracy
+        s['test_corpus'] = against
+
+        coll.update({ 'uid': classifier.get_uid() }, s, upsert=True)
+        LOGGER.info("Updated collection database: %s" % s)
 
 
 if __name__ == '__main__':
@@ -42,6 +57,7 @@ if __name__ == '__main__':
     parser.add_argument('--path', required=True, type=str, help='Directory where serialized \
                         classifier is')
     parser.add_argument('--against', required=True, type=str, help='Redis data source to test against')
+    parser.add_argument('--nodb', action='store_true', help='Disable writing to DB')
 
     args = parser.parse_args()
-    main(args.path, args.against)
+    main(args.path, args.against, args.nodb)
