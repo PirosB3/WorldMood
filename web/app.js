@@ -14,11 +14,11 @@ var app = express();
 
 var TwitterStreamer = require(__dirname + "/libs/streamer.js").TwitterStreamer;
 KEYS = {
-		consumer_key:        'tIPFMyYowULdaxhXAUdw'
-	, consumer_secret:     '8KmoOxQfJAHCoEZ9lTdxvbTaFepat3ipH1vlUofQY'
-	, access_token:        '79504968-C9PQG5G1BFCESQI4axGi6XC4AlfiddiImg2HQbhqt'
-	, access_token_secret: 'm2XjR91L1iFiGfh4W8DjbgV9DkyITxHxtKUSaZM6Sw'
-}
+          consumer_key: process.env["TWITTER_CONSUMER_KEY"]
+	, consumer_secret: process.env["TWITTER_CONSUMER_SECRET"]
+	, access_token: process.env["TWITTER_ACCESS_TOKEN"]
+	, access_token_secret: process.env["TWITTER_ACCESS_TOKEN_SECRET"]
+};
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
