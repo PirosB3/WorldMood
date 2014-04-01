@@ -1,5 +1,5 @@
 
-define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationView'], function(Streamer, TermCollection, TweetFrameView, PieView, NavigationView) {
+define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationView', 'realtimeGraphView'], function(Streamer, TermCollection, TweetFrameView, PieView, NavigationView, RealtimeGraphView) {
 
   window.app = new Backbone.Marionette.Application();
 
@@ -20,7 +20,7 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
     start: function(query) {
       app.vent.off('streamer:newMessage:newTermClassified');
 
-      app.queue = new TermCollection;
+      app.queue = new TermCollection([], { nToKeep: 100 });
       app.tweetFrameViewPlaceholder.show(new TweetFrameView({
         queue: app.queue,
         vent: app.vent,
@@ -29,6 +29,9 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
       app.tweetDetailsPlaceholder.show(new PieView({
         queue: app.queue,
         vent: app.vent
+      }));
+      app.realtimeGraphViewPlaceholder.show(new RealtimeGraphView({
+        collection: app.queue.memory
       }));
 
       app.vent.trigger('streamer:sendMessage', {trackNewTerm: query});
@@ -45,7 +48,8 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
   window.app.addRegions({
     navigationPlaceholder: ".navigation-placeholder",
     tweetFrameViewPlaceholder: ".tweetFrameView-placeholder",
-    tweetDetailsPlaceholder: ".tweetDetails-placeholder"
+    tweetDetailsPlaceholder: ".tweetDetails-placeholder",
+    realtimeGraphViewPlaceholder: ".tweetRealtimeGraph-placeholder"
   });
   window.app.addInitializer(function(){
     window.app.router = new AppRouter();

@@ -1,5 +1,5 @@
 {
-  "name": "application-name",
+  "name": "core",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -7,6 +7,14 @@
   },
   "dependencies": {
     "express": "3.4.4",
-    "jade": "*"
-  }
+    "jade": "*",
+    "twit": "1.1.12",
+    "underscore": "1.6.0",
+    "ws": "0.4.31",
+    "zmq": "2.6.0"
+  },
+  "main": "app.js",
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC"
 }

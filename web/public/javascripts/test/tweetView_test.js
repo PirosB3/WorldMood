@@ -81,7 +81,7 @@ define(['tweetView', 'term'], function(TweetView, Term) {
             expect(timerCallback).toHaveBeenCalled();
         });
 
-        it('should set timer on swap, if enabled', function() {
+        xit('should set timer on swap, if enabled', function() {
             jasmine.Clock.useMock();
             timerCallback = jasmine.createSpy('timerCallback');
 

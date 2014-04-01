@@ -37,3 +37,25 @@
   color: white;
   line-height: 2;
 }
+
+#pie-placeholder {
+  height: 293px;
+}
+
+.arc path {
+  stroke: #fff;
+}
+
+.arc text {
+  fill: white;
+}
+
+.realtime-graph-view {
+  height: 280px;
+}
+
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
