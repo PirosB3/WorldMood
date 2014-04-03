@@ -129,7 +129,7 @@ define(['text!templates/pieView.html', 'd3', 'marionette'], function(tpl, d3) {
         bars
           .html(_.bind(function(d) {
             // return '<h3>' +  + '</h3>';
-            return '<h3>' + d.value + ' ' + this.capitaliseFirstLetter(d.label) + '</h3>';
+            return '<h3>' + d.value + '</h3>';
           }, this))
           .transition()
           .style('width', function(d) {
