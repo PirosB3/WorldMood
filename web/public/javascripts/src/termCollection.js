@@ -22,11 +22,14 @@ define(['term', 'xdate'], function(Term, XDate) {
             };
           }).reverse();
         },
+        _secs: function(d) {
+            return d.clone().setMilliseconds(0);
+        },
         _getTweetsFromRange: function(r) {
-          return this.filter(function(t) {
-            var d = new XDate(t.get('timestamp'));
-            return (r.start <= d) && (d <= r.stop);
-          });
+          return this.filter(_.bind(function(t) {
+            var d = t.get('timestamp').getTime();
+            return (r.start.getTime() <= d) && (d <= r.stop.getTime());
+          }, this));
         },
         aggregate: function(args) {
           return this._getSecondRange(args).map(_.bind(function(range) {
