@@ -28,6 +28,10 @@ requirejs.config({
             ],
             exports: 'Backbone'
         },
+        xdate: {
+            deps: [],
+            exports: 'XDate'
+        },
         bootstrap: {
             deps: ['jquery'],
             exports: 'jquery'
@@ -37,6 +41,7 @@ requirejs.config({
         jquery: '../libs/jquery',
         backbone: '../libs/backbone',
         underscore: '../libs/underscore',
+        xdate: '../libs/xdate.dev',
         marionette: '../libs/backbone.marionette',
         text: '../libs/text'
     },

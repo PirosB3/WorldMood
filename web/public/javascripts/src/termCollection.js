@@ -1,4 +1,4 @@
-define(['term'], function(Term) {
+define(['term', 'xdate'], function(Term, XDate) {
     return Backbone.Collection.extend({
         initialize: function(models, options) {
           if (options && options.nToKeep) {
@@ -12,6 +12,12 @@ define(['term'], function(Term) {
               }
             });
           }
+        },
+        _getSecondRange: function(args) {
+          var start = new XDate();
+          return _.range(0, args.toSeconds, args.stepSeconds).map(function(i) {
+            return start.clone().addSeconds(-i);
+          }).reverse();
         },
         model: Term,
         add: function(models, options) {

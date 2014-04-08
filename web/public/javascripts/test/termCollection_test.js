@@ -11,13 +11,25 @@ var _generateData = function(pos, neg) {
     }
 }
 
+var _generateDataWithTimestamp = function() {
+    return {
+        prediction: {
+            result: 'negative',
+            probs: {
+                positive: 0.7,
+                negative: 0.3
+            }
+        },
+    }
+}
+
 var addByRange = function(c, n) {
   _.range(0, n).forEach(function(i) {
     c.add(_generateData(i, i));
   });
 };
 
-define(['termCollection'], function(TermCollection) {
+define(['termCollection', 'xdate'], function(TermCollection, XDate) {
     describe('TermCollection', function() {
         it('should be able to return accuracy', function() {
             var coll = new TermCollection([
@@ -53,6 +65,20 @@ define(['termCollection'], function(TermCollection) {
             expect(aSpy.callCount).toEqual(2);
             expect(aSpy.calls[0].object).toBe(coll.memory);
             expect(aSpy.calls[1].object).toBe(coll);
+        });
+
+        it('should be able to aggregate by time', function() {
+            var range = TermCollection.prototype._getSecondRange({
+                toSeconds: 30, stepSeconds: 2
+            });
+            expect(range.length).toBe(15);
+
+            range = TermCollection.prototype._getSecondRange({
+                toSeconds: 30, stepSeconds: 1
+            });
+            expect(range.length).toBe(30);
+
+            expect(range[0] < range[29]).toBeTruthy();
         });
     });
 });
