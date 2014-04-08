@@ -11,8 +11,9 @@ var _generateData = function(pos, neg) {
     }
 }
 
-var _generateDataWithTimestamp = function() {
+var _generateDataWithTimestamp = function(t) {
     return {
+        timestamp: t,
         prediction: {
             result: 'negative',
             probs: {
@@ -69,16 +70,36 @@ define(['termCollection', 'xdate'], function(TermCollection, XDate) {
 
         it('should be able to aggregate by time', function() {
             var range = TermCollection.prototype._getSecondRange({
-                toSeconds: 30, stepSeconds: 2
+                toSeconds: 10, stepSeconds: 2
             });
-            expect(range.length).toBe(15);
+            expect(range.length).toBe(5);
 
-            range = TermCollection.prototype._getSecondRange({
-                toSeconds: 30, stepSeconds: 1
+            var start, stop;
+            var r0 = range[0];
+            start = r0.start;
+            stop = r0.stop;
+            expect(start.diffSeconds(stop)).toBe(2);
+
+            var r1 = range[1];
+            start = r1.start;
+            stop = r1.stop;
+            expect(start.diffSeconds(stop)).toBe(2);
+
+            expect(range[4].stop.diffSeconds(range[0].start)).toBe(-10);
+        });
+
+        xit('should be able to pull out tweets from time', function() {
+            var d = new XDate;
+            // A tweet comes in every 5 seconds
+            var tweets = _.range(0, 30, 5).map(function(t) {
+                return _generateDataWithTimestamp(d.clone().addSeconds(-5));
             });
-            expect(range.length).toBe(30);
+            var coll = new TermCollection(tweets);
 
-            expect(range[0] < range[29]).toBeTruthy();
+            // Aggregate every 10 seconds (2 tweets every iteration)
+            var res = coll.aggregate({toSeconds: 30, stepSeconds: 10});
+            expect(res.length).toBe(3);
+
         });
     });
 });

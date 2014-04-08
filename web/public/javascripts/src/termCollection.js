@@ -16,8 +16,16 @@ define(['term', 'xdate'], function(Term, XDate) {
         _getSecondRange: function(args) {
           var start = new XDate();
           return _.range(0, args.toSeconds, args.stepSeconds).map(function(i) {
-            return start.clone().addSeconds(-i);
+            return {
+                start: start.clone().addSeconds(-i),
+                stop: start.clone().addSeconds(-i+args.stepSeconds)
+            };
           }).reverse();
+        },
+        aggregate: function(args) {
+            return this._getSecondRange(args).map(function(d) {
+                return this._getTweetsInSecond
+            });
         },
         model: Term,
         add: function(models, options) {
