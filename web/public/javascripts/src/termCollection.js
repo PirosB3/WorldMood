@@ -22,10 +22,16 @@ define(['term', 'xdate'], function(Term, XDate) {
             };
           }).reverse();
         },
+        _getTweetsFromRange: function(r) {
+          return this.filter(function(t) {
+            var d = new XDate(t.get('timestamp'));
+            return (r.start <= d) && (d <= r.stop);
+          });
+        },
         aggregate: function(args) {
-            return this._getSecondRange(args).map(function(d) {
-                return this._getTweetsInSecond
-            });
+          return this._getSecondRange(args).map(_.bind(function(range) {
+            return this._getTweetsFromRange(range);
+          }, this));
         },
         model: Term,
         add: function(models, options) {
