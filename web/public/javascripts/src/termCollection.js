@@ -27,14 +27,15 @@ define(['term', 'xdate'], function(Term, XDate) {
         },
         _getTweetsFromRange: function(r) {
           return this.filter(_.bind(function(t) {
-            var d = t.get('timestamp').getTime();
+            var d = t.get('timestamp');
             return (r.start.getTime() <= d) && (d <= r.stop.getTime());
           }, this));
         },
         aggregate: function(args) {
-          return this._getSecondRange(args).map(_.bind(function(range) {
+          var res = this._getSecondRange(args).map(_.bind(function(range) {
             return this._getTweetsFromRange(range);
           }, this));
+          return res.slice(0, res.length-1);
         },
         model: Term,
         add: function(models, options) {

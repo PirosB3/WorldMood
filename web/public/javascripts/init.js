@@ -20,12 +20,16 @@ require.config({
             ],
             exports: 'Backbone'
         },
+        xdate: {
+            exports: 'XDate'
+        },
         bootstrap: {
             deps: ['jquery'],
             exports: 'jquery'
         }
     },
     paths: {
+        xdate: '/javascripts/libs/xdate.dev',
         jquery: '/javascripts/libs/jquery',
         backbone: '/javascripts/libs/backbone',
         underscore: '/javascripts/libs/underscore',

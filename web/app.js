@@ -73,6 +73,7 @@ sock.on('message', function(msg) {
     try {
 	var data = JSON.parse(msg.toString());
 	data['message'] = 'newTermClassified';
+        data['timestamp'] = Date.now()
 
 	// Emit to all websockets the new data
 	wss.clients.forEach(function(ws) {
