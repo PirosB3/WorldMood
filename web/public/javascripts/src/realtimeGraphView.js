@@ -11,9 +11,12 @@ define(['d3', 'marionette'], function(d3) {
             var groups = _.groupBy(a, function(e) {
                 return e.get('prediction').result;
             });
-            _.keys(groups).forEach(function(k) {
-                groups[k] = groups[k].length / a.length
-            });
+            groups = _.extend({ positive: 0, negative: 0}, groups);
+            if (a.length > 0) {
+                _.keys(groups).forEach(function(k) {
+                    groups[k] = groups[k].length / a.length
+                });
+            }
             return groups;
         });
         console.log(_.pluck(ratioAggregate, 'positive'));
