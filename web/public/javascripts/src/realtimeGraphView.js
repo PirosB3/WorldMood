@@ -25,6 +25,11 @@ define(['d3', 'marionette'], function(d3) {
             return groups;
         });
 
+        var positiveAggregates = _.pluck(ratioAggregate, 'positive');
+        positiveAggregates._type = 'positive';
+        var negativeAggregates = _.pluck(ratioAggregate, 'negative');
+        negativeAggregates._type = 'negative'
+
         if (!this.svg) {
           this.$el.append('<div class="col-md-10 col-md-offset-1"></div>');
           var parent = this.$('div')[0];
@@ -42,15 +47,26 @@ define(['d3', 'marionette'], function(d3) {
             .domain([0, ratioAggregate.length])
             .range([0, width]);
 
-          this.line = d3.svg.area()
-            .interpolate( 'basis' )
-            .y1(_.bind(function(d, i) {
-              return this.yScale(d.positive);
-            }, this))
-            .y0(halfHeight)
-            .x(_.bind(function(d, i) {
-              return this.xScale(i);
-            }, this));
+          this.areas = {
+            'positive': d3.svg.area()
+              .interpolate('basis')
+              .x(_.bind(function(d, i) {
+                return this.xScale(i);
+              }, this))
+              .y1(_.bind(function(d, i) {
+                return this.yScale(d);
+              }, this))
+              .y0(halfHeight),
+            'negative': d3.svg.area()
+              .interpolate('basis')
+              .x(_.bind(function(d, i) {
+                return this.xScale(i);
+              }, this))
+              .y1(_.bind(function(d, i) {
+                return this.yScale(d);
+              }, this))
+              .y0(halfHeight)
+          };
 
           this.svg = d3.select(parent)
             .append('p')
@@ -64,32 +80,31 @@ define(['d3', 'marionette'], function(d3) {
           .append("rect")
             .attr("width", width)
             .attr("height", height);
-
-          //this.svg.append("g")
-            //.attr("class", "x axis")
-            //.attr("transform", "translate(0," + this.yScale(0) + ")")
-            //.call(d3.svg.axis().scale(this.xScale).orient("bottom"));
-
-          //this.svg.append("g")
-            //.attr("class", "y axis")
-            //.call(d3.svg.axis().scale(this.yScale).orient("right"));
         }
 
         var path = this.svg.selectAll('path.line')
-          .data([ratioAggregate]);
+          .data([positiveAggregates, negativeAggregates], function(d) {
+              return d._type;
+          });
 
         path.enter()
           .append("g")
           .attr("clip-path", "url(#clip)")
           .append("path")
-          .attr('class', 'line')
-          .style('fill', '#5cb85c')
+          .attr("transform", function(a, b) {
+              var translateY = a._type == 'negative' ? halfHeight : 0;
+              return "translate(0 " + translateY + ")";
+          })
+          .attr('class', function(a, b) {
+              return 'line ' + a._type;
+          })
 
         path
           .transition()
-          .attr("d", this.line)
-          //.ease("linear")
-          //.attr("transform", "translate(" + this.xScale(-1) + ")");
+          .attr("d", _.bind(function(a, b) {
+              console.log(a._type, a);
+              return this.areas[a._type](a);
+          }, this));
         
     },
     render: function() {
@@ -98,4 +113,3 @@ define(['d3', 'marionette'], function(d3) {
     }
   });
 });
-
