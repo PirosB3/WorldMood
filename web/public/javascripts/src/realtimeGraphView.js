@@ -8,7 +8,7 @@ define(['d3', 'marionette'], function(d3) {
     onRender: function() {
 
         // Compose metrics
-        var aggregate = this.collection.aggregate({ toSeconds: 5, stepSeconds: 1 });
+        var aggregate = this.collection.aggregate({ toSeconds: 15, stepSeconds: 3 });
         var ratioAggregate = aggregate.map(function(a) {
             var groups = _.groupBy(a, function(e) {
                 return e.get('prediction').result;
@@ -36,7 +36,7 @@ define(['d3', 'marionette'], function(d3) {
 
           // Create graph
           var width = this.$el.width() - 10;
-          var height = this.$el.height() - 10;
+          var height = this.$el.height() - 100;
           var halfHeight = height/2;
 
           this.yScale = d3.scale.linear()
@@ -53,6 +53,10 @@ define(['d3', 'marionette'], function(d3) {
               .x(_.bind(function(d, i) {
                 return this.xScale(i);
               }, this))
+              //.y1(_.bind(function(d, i) {
+                //return halfHeight - this.yScale(d);
+              //}, this))
+              //.y0(0),
               .y1(_.bind(function(d, i) {
                 return this.yScale(d);
               }, this))
@@ -92,7 +96,7 @@ define(['d3', 'marionette'], function(d3) {
           .attr("clip-path", "url(#clip)")
           .append("path")
           .attr("transform", function(a, b) {
-              var translateY = a._type == 'negative' ? halfHeight : 0;
+              var translateY = a._type == 'positive' ? halfHeight : 0;
               return "translate(0 " + translateY + ")";
           })
           .attr('class', function(a, b) {
@@ -108,7 +112,7 @@ define(['d3', 'marionette'], function(d3) {
         
     },
     render: function() {
-      setInterval(_.bind(this.triggerMethod, this, "render"), 1000);
+      setInterval(_.bind(this.triggerMethod, this, "render"), 3000);
       return this.el;
     }
   });
