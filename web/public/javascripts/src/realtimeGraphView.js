@@ -71,7 +71,7 @@ define(['d3', 'marionette'], function(d3) {
           this.svg = d3.select(parent)
             .append('p')
             .append('svg')
-            .attr("width", width - 200)
+            .attr("width", width - this.xScale(-1))
             .attr("height", height)
             .append('g');
 
