@@ -8,7 +8,7 @@ define(['d3', 'marionette'], function(d3) {
     onRender: function() {
 
         // Compose metrics
-        var aggregate = this.collection.aggregate({ toSeconds: 15, stepSeconds: 3 });
+        var aggregate = this.collection.aggregate({ toSeconds: 15, stepSeconds: 1 });
         var ratioAggregate = aggregate.map(function(a) {
             var groups = _.groupBy(a, function(e) {
                 return e.get('prediction').result;
@@ -44,7 +44,7 @@ define(['d3', 'marionette'], function(d3) {
             .range([0, halfHeight]);
       
           this.xScale = d3.scale.linear()
-            .domain([0, ratioAggregate.length])
+            .domain([0, ratioAggregate.length -1])
             .range([0, width]);
 
           this.areas = {
@@ -53,10 +53,6 @@ define(['d3', 'marionette'], function(d3) {
               .x(_.bind(function(d, i) {
                 return this.xScale(i);
               }, this))
-              //.y1(_.bind(function(d, i) {
-                //return halfHeight - this.yScale(d);
-              //}, this))
-              //.y0(0),
               .y1(_.bind(function(d, i) {
                 return this.yScale(d);
               }, this))
@@ -67,15 +63,15 @@ define(['d3', 'marionette'], function(d3) {
                 return this.xScale(i);
               }, this))
               .y1(_.bind(function(d, i) {
-                return this.yScale(d);
+                return halfHeight - this.yScale(d);
               }, this))
-              .y0(halfHeight)
+              .y0(0)
           };
 
           this.svg = d3.select(parent)
             .append('p')
             .append('svg')
-            .attr("width", width)
+            .attr("width", width - 200)
             .attr("height", height)
             .append('g');
 
@@ -97,6 +93,7 @@ define(['d3', 'marionette'], function(d3) {
           .append("path")
           .attr("transform", function(a, b) {
               var translateY = a._type == 'positive' ? halfHeight : 0;
+              translateY = 0;
               return "translate(0 " + translateY + ")";
           })
           .attr('class', function(a, b) {
@@ -104,15 +101,18 @@ define(['d3', 'marionette'], function(d3) {
           })
 
         path
-          .transition()
+          // .transition()
           .attr("d", _.bind(function(a, b) {
-              console.log(a._type, a);
               return this.areas[a._type](a);
-          }, this));
+          }, this))
+          .transition()
+          .attr("transform", null)
+    	  .ease("linear")
+    	  .attr("transform", "translate(" + this.xScale(-1) + ")");
         
     },
     render: function() {
-      setInterval(_.bind(this.triggerMethod, this, "render"), 3000);
+      setInterval(_.bind(this.triggerMethod, this, "render"), 1000);
       return this.el;
     }
   });
