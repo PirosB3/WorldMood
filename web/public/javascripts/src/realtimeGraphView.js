@@ -5,9 +5,16 @@ define(['d3', 'marionette'], function(d3) {
       'negative': 'rgb(217, 83, 79)',
       'positive': 'rgb(92, 184, 92)'
     },
+    initialize: function(args) {
+      this.vent = args.vent;
+      this.listenTo(this.vent, 'streamer:ready', function() {
+          console.log("SET COLLECTION");
+          this.collection = window.app.queue;
+      });
+    },
     getData: function() {
       // Compose metrics
-      var aggregate = this.collection.aggregate({ toSeconds: 1.5, stepSeconds: 0.3 });
+      var aggregate = this.collection.aggregate({ toSeconds: 10, stepSeconds: 1 });
       var ratioAggregate = aggregate.map(function(a) {
           var groups = _.groupBy(a, function(e) {
               return e.get('prediction').result;
@@ -42,28 +49,24 @@ define(['d3', 'marionette'], function(d3) {
         .range([0, this.width]);
 
       return {
-         'scales': {
-           x: xScale,
-           y: yScale
-         },
-         'positive': d3.svg.area()
-           .interpolate('basis')
-           .x(_.bind(function(d, i) {
-             return xScale(i);
-           }, this))
-           .y1(_.bind(function(d, i) {
-             return yScale(d);
-           }, this))
-           .y0(halfHeight),
-         'negative': d3.svg.area()
-           .interpolate('basis')
-           .x(_.bind(function(d, i) {
-             return xScale(i);
-           }, this))
-           .y1(_.bind(function(d, i) {
-             return halfHeight - yScale(d);
-           }, this))
-           .y0(0)
+        'positive': d3.svg.area()
+          .interpolate('basis')
+          .x(_.bind(function(d, i) {
+            return xScale(i);
+          }, this))
+          .y1(_.bind(function(d, i) {
+            return halfHeight - yScale(d);
+          }, this))
+          .y0(halfHeight),
+        'negative': d3.svg.area()
+          .interpolate('basis')
+          .x(_.bind(function(d, i) {
+            return xScale(i);
+          }, this))
+          .y1(_.bind(function(d, i) {
+            return halfHeight - yScale(d);
+          }, this))
+          .y0(halfHeight)
       };
     },
     onRender: function() {
@@ -76,13 +79,10 @@ define(['d3', 'marionette'], function(d3) {
           this.width = this.$el.width() - 10;
           this.height = this.$el.height() - 100;
 
-          var data = this.getData();
-          var areas = this.getAreas(data);
-
           this.svg = d3.select(parent)
             .append('p')
             .append('svg')
-            .attr("width", this.width - areas.scales.x(-1))
+            .attr("width", this.width)
             .attr("height", this.height)
             .append('g');
 
@@ -103,23 +103,19 @@ define(['d3', 'marionette'], function(d3) {
           .append("g")
           .attr("clip-path", "url(#clip)")
           .append("path")
-          .attr("transform", function(a, b) {
-              //var translateY = a._type == 'positive' ? halfHeight : 0;
-              var translateY = 0;
+          .attr("transform", _.bind(function(a, b) {
+              var translateY = a._type == 'negative' ? this.height/2 : 0;
               return "translate(0 " + translateY + ")";
-          }, this)
+          }, this))
           .attr('class', function(a, b) {
               return 'line ' + a._type;
           })
 
         path
+          .transition()
           .attr("d", _.bind(function(a, b) {
               return areas[a._type](a);
-          }, this))
-        .transition()
-          .attr("transform", null)
-    	  .ease("linear")
-          .attr("transform", "translate(" + areas.scales.x(-1) + ")");
+          }, this));
         
     },
     render: function() {

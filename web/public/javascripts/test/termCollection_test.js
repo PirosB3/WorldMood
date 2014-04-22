@@ -114,6 +114,18 @@ define(['termCollection', 'xdate'], function(TermCollection, XDate) {
             });
             expect(res.length).toBe(3);
         });
+
+        it('should purge memory if too high', function() {
+            TermCollection.GC_TRIGGER_COUNT = 2000;
+            TermCollection.GC_TRIGGER_CUTOFF = 1000;
+
+            var coll = new TermCollection();
+            for(var i=0; i < TermCollection.GC_TRIGGER_COUNT + 1; i++) {
+                coll.add(_generateData(.30, .70))
+            };
+
+            expect(coll.length).toEqual(1001);
+        })
     });
 });
 

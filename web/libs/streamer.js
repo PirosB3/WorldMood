@@ -41,7 +41,7 @@ TwitterStreamer.prototype.emitTweet = function(keyword, tweet) {
 	    	this.emit('tweet', formattedTweet);
 	    }
         } else {
-            console.log("MEMORY LEAK!");
+            console.log("MEMORY LEAK! term is " + keyword + " and should be " + this.currentKeyword);
         }
 }
 

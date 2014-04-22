@@ -1,6 +1,9 @@
 define(['term', 'xdate'], function(Term, XDate) {
-    return Backbone.Collection.extend({
+    var MAX_QUEUE_SIZE = 1000;
+
+    var TermCollection = Backbone.Collection.extend({
         initialize: function(models, options) {
+          this.c = 0;
           if (options && options.nToKeep) {
             this.nToKeep = options.nToKeep;
             this.memory = new Backbone.Collection;
@@ -52,9 +55,21 @@ define(['term', 'xdate'], function(Term, XDate) {
               (model = res[i]).trigger('add', model, this, options);
             }
           }
+
+          if (this.length >= TermCollection.GC_TRIGGER_COUNT) {
+              var sortedByTimestamp = this.sortBy(function(a) { return a.get('timestamp')});
+              sortedByTimestamp.slice(0, TermCollection.GC_TRIGGER_CUTOFF).forEach(_.bind(function(e) {
+                  this.remove(e.cid, { silent: true });
+              }, this));
+          }
         },
         comparator: function(m) {
             return m.getAccuracy();
         }
     });
+    TermCollection.GC_TRIGGER_COUNT = 2000;
+    TermCollection.GC_TRIGGER_CUTOFF = 1000;
+
+    return TermCollection;
+
 });

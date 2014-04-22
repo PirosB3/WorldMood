@@ -61,10 +61,10 @@
 }
 
 .line.positive {
-  fill: #d9534f;
+  fill: #5cb85c;
 }
 
 .line.negative {
-  fill: #5cb85c;
+  fill: #d9534f;
 }
 
