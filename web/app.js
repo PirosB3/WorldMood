@@ -92,6 +92,7 @@ streamer.on('tweet', function(t) {
 	console.log("Sending new term..");
 	sock.send(JSON.stringify({
 	    text: text,
+            tracked_keyword: t['tracked_keyword'],
 	    user: t['user']
 	}));
     }
