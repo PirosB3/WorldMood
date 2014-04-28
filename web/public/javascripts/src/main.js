@@ -29,7 +29,6 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
     },
     defaultRoute: function() {
       app.container.show(new LandingLayout);
-      //this.navigate("/track/Plymouth", {trigger: true});
     },
     start: function(query) {
       app.container.show(new AppLayout);

@@ -68,3 +68,9 @@
   fill: #d9534f;
 }
 
+
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}

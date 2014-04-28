@@ -1,4 +1,7 @@
 define(['d3', 'marionette'], function(d3) {
+  
+  var PADDING = 20;
+
   return Backbone.Marionette.ItemView.extend({
     className: 'row realtime-graph-view',
     COLORS: {
@@ -8,7 +11,6 @@ define(['d3', 'marionette'], function(d3) {
     initialize: function(args) {
       this.vent = args.vent;
       this.listenTo(this.vent, 'streamer:ready', function() {
-          console.log("SET COLLECTION");
           this.collection = window.app.queue;
       });
     },
@@ -37,8 +39,7 @@ define(['d3', 'marionette'], function(d3) {
       negativeAggregates._type = 'negative'
       return [positiveAggregates, negativeAggregates];
     },
-    getAreas: function(data) {
-      var halfHeight = this.height/2;
+    getScales: function(data, halfHeight) {
 
       var yScale = d3.scale.linear()
         .domain([0, 1])
@@ -47,6 +48,41 @@ define(['d3', 'marionette'], function(d3) {
       var xScale = d3.scale.linear()
         .domain([0, data[0].length])
         .range([0, this.width]);
+      return {
+          x: xScale,
+          y: yScale
+      };
+    },
+    getAxes: function(scales) {
+      var xScale = scales.x;
+      var yScale = scales.y;
+
+      var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .tickFormat(function(d) {
+            var n = Math.abs(d-10);
+            if (n == 9) {
+                return "";
+            } else {
+                var w = n == 1? "sec" : "secs";
+                return "" + n + " " + w + " ago";
+            }
+        })
+        .orient('bottom');
+
+      var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left');
+
+      return {
+          x: xAxis,
+          y: yAxis
+      };
+    },
+    getAreas: function(scales, halfHeight) {
+
+      var xScale = scales.x;
+      var yScale = scales.y;
 
       return {
         'positive': d3.svg.area()
@@ -83,7 +119,7 @@ define(['d3', 'marionette'], function(d3) {
             .append('p')
             .append('svg')
             .attr("width", this.width)
-            .attr("height", this.height)
+            .attr("height", this.height + PADDING + 50)
             .append('g');
 
           this.svg.append("defs").append("clipPath")
@@ -94,7 +130,11 @@ define(['d3', 'marionette'], function(d3) {
         }
 
         var data = this.getData();
-        var areas = this.getAreas(data);
+
+        var halfHeight = this.height/2;
+        var scales = this.getScales(data, halfHeight);
+        var areas = this.getAreas(scales, halfHeight);
+        var axes = this.getAxes(scales);
 
         var path = this.svg.selectAll('path.line')
           .data(data);
@@ -116,7 +156,18 @@ define(['d3', 'marionette'], function(d3) {
           .attr("d", _.bind(function(a, b) {
               return areas[a._type](a);
           }, this));
-        
+
+        var scales = this.svg.selectAll('g.axis')
+            .data([axes])
+            .enter()
+            .append('g')
+            .attr("transform", _.bind(function() {
+              var x = scales.x(-1);
+              var y = this.height + PADDING;
+              return "translate(" + x + " " + y + ")";
+            }, this))
+            .attr("class", "axis")
+            .call(axes.x);
     },
     render: function() {
       setInterval(_.bind(this.triggerMethod, this, "render"), 1000);
