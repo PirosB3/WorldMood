@@ -3,6 +3,10 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
 
   window.app = new Backbone.Marionette.Application();
 
+  var LandingLayout = Backbone.Marionette.Layout.extend({
+      template: "#landing-layout-placeholder",
+  });
+
   var AppLayout = Backbone.Marionette.Layout.extend({
       template: "#app-layout-placeholder",
       regions: {
@@ -24,7 +28,8 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
       '*path': 'defaultRoute'
     },
     defaultRoute: function() {
-      this.navigate("/track/Plymouth", {trigger: true});
+      app.container.show(new LandingLayout);
+      //this.navigate("/track/Plymouth", {trigger: true});
     },
     start: function(query) {
       app.container.show(new AppLayout);

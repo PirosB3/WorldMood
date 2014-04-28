@@ -3,6 +3,33 @@ extends layout
 block content
   div.container
 
+  script#landing-layout-placeholder(type="text/template")
+    link(rel='stylesheet', href='/stylesheets/cover.css')
+    .cover-container
+        .masthead.clearfix
+          .inner.cover
+            h1.cover-heading WorldMood
+            p.lead
+              | WorldMood is a real-time sentiment analysis processor
+              | that combines natural language processing with machine
+              | learning techniques to show how people are feeling now
+
+            form(action='/#red')
+              input.form-control(type='text', name='query', placeholder='Palestine')
+              input.btn.btn-default(type='submit')
+            
+            p
+              | or try <a href="/#track/london">#London</a>,
+              | <a href="/#track/sad">#sad</a>,
+              | <a href="/#track/moody">#moody</a>,
+              | <a href="/#track/weather">#weather</a>,
+              | <a href="/#track/italy">#Italy</a>
+
+          .mastfoot
+            .inner
+              p
+                | Made by Daniel Pyrathon, BSc Computer Science
+
   script#app-layout-placeholder(type="text/template")
     .row
       .col-md-4
