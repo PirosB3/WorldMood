@@ -3,6 +3,15 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
 
   window.app = new Backbone.Marionette.Application();
 
+  var AppLayout = Backbone.Marionette.Layout.extend({
+      template: "#app-layout-placeholder",
+      regions: {
+        tweetFrameViewPlaceholder: ".tweetFrameView-placeholder",
+        tweetDetailsPlaceholder: ".tweetDetails-placeholder",
+        realtimeGraphViewPlaceholder: ".tweetRealtimeGraph-placeholder"
+      }
+  });
+
   var AppRouter = Backbone.Marionette.AppRouter.extend({
     initialize: function() {
       app.navigationPlaceholder.show(new NavigationView);
@@ -18,19 +27,21 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
       this.navigate("/track/Plymouth", {trigger: true});
     },
     start: function(query) {
+      app.container.show(new AppLayout);
+
       app.vent.off('streamer:newMessage:newTermClassified');
 
       app.queue = new TermCollection([], { nToKeep: 100 });
-      app.tweetFrameViewPlaceholder.show(new TweetFrameView({
+      app.container.currentView.tweetFrameViewPlaceholder.show(new TweetFrameView({
         queue: app.queue,
         vent: app.vent,
         numChilds: 3
       }));
-      app.tweetDetailsPlaceholder.show(new PieView({
+      app.container.currentView.tweetDetailsPlaceholder.show(new PieView({
         queue: app.queue,
         vent: app.vent
       }));
-      app.realtimeGraphViewPlaceholder.show(new RealtimeGraphView({
+      app.container.currentView.realtimeGraphViewPlaceholder.show(new RealtimeGraphView({
         collection: app.queue,
         vent: app.vent
       }));
@@ -48,10 +59,9 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
 
   window.app.addRegions({
     navigationPlaceholder: ".navigation-placeholder",
-    tweetFrameViewPlaceholder: ".tweetFrameView-placeholder",
-    tweetDetailsPlaceholder: ".tweetDetails-placeholder",
-    realtimeGraphViewPlaceholder: ".tweetRealtimeGraph-placeholder"
+    container: ".container"
   });
+
   window.app.addInitializer(function(){
     window.app.router = new AppRouter();
     Backbone.history.start();
