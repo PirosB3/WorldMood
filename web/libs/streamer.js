@@ -25,19 +25,24 @@ TwitterStreamer.prototype.buildStream = function(keyword) {
 		language: 'en' });
 }
 
-TwitterStreamer.prototype.emitTweet = function(tweet) {
-	var text = tweet.text;
-	var textHash = createHash(text);
-	if (!this.currentCache[textHash]) {
-		var formattedTweet = {
-			user: _.pick(tweet.user, 'profile_image_url', 'screen_name'),
-			text: tweet.text,
-			keyword: this.currentKeyword
-		};
-		formattedTweet.user.profile_image_url = formattedTweet.user.profile_image_url.replace('_normal', '_bigger')
-		this.currentCache[textHash] = true;
-		this.emit('tweet', formattedTweet);
-	}
+TwitterStreamer.prototype.emitTweet = function(keyword, tweet) {
+        if (keyword == this.currentKeyword) {
+	    var text = tweet.text;
+	    var textHash = createHash(text);
+	    if (!this.currentCache[textHash]) {
+	    	var formattedTweet = {
+	    		user: _.pick(tweet.user, 'profile_image_url', 'screen_name'),
+	    		text: tweet.text,
+	    		keyword: this.currentKeyword
+	    	};
+	    	formattedTweet.user.profile_image_url = formattedTweet.user.profile_image_url.replace('_normal', '_bigger')
+                    formattedTweet.tracked_keyword = keyword;
+	    	this.currentCache[textHash] = true;
+	    	this.emit('tweet', formattedTweet);
+	    }
+        } else {
+            console.log("MEMORY LEAK! term is " + keyword + " and should be " + this.currentKeyword);
+        }
 }
 
 TwitterStreamer.prototype.setTrack = function(keyword) {
@@ -49,7 +54,7 @@ TwitterStreamer.prototype.setTrack = function(keyword) {
 	this.currentCache = {};
 
 	this.currentStream = this.buildStream(keyword);
-	this.currentStream.on('tweet', _.bind(this.emitTweet, this));
+	this.currentStream.on('tweet', _.bind(_.partial(this.emitTweet, keyword), this));
 }
 
 exports.TwitterStreamer = TwitterStreamer;

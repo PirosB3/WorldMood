@@ -11,13 +11,27 @@ var _generateData = function(pos, neg) {
     }
 }
 
+var _generateDataWithTimestamp = function(t, tid) {
+    return {
+        tid: tid,
+        timestamp: t.setMilliseconds(0),
+        prediction: {
+            result: 'negative',
+            probs: {
+                positive: 0.7,
+                negative: 0.3
+            }
+        },
+    }
+}
+
 var addByRange = function(c, n) {
   _.range(0, n).forEach(function(i) {
     c.add(_generateData(i, i));
   });
 };
 
-define(['termCollection'], function(TermCollection) {
+define(['termCollection', 'xdate'], function(TermCollection, XDate) {
     describe('TermCollection', function() {
         it('should be able to return accuracy', function() {
             var coll = new TermCollection([
@@ -54,6 +68,64 @@ define(['termCollection'], function(TermCollection) {
             expect(aSpy.calls[0].object).toBe(coll.memory);
             expect(aSpy.calls[1].object).toBe(coll);
         });
+
+        it('should be able to aggregate by time', function() {
+            var range = TermCollection.prototype._getSecondRange({
+                toSeconds: 10, stepSeconds: 2
+            });
+            expect(range.length).toBe(5);
+
+            var start, stop;
+            var r0 = range[0];
+            start = r0.start;
+            stop = r0.stop;
+            expect(start.diffSeconds(stop)).toBe(2);
+
+            var r1 = range[1];
+            start = r1.start;
+            stop = r1.stop;
+            expect(start.diffSeconds(stop)).toBe(2);
+
+            expect(range[4].stop.diffSeconds(range[0].start)).toBe(-10);
+        });
+
+        it('should be able to pull out tweets from range', function() {
+            var d = new XDate;
+            var tweets = _.range(0, 30).map(function(t) {
+                return _generateDataWithTimestamp(d.clone().addSeconds(-t), -t);
+            });
+            var coll = new TermCollection(tweets);
+
+            var res = coll._getTweetsFromRange({
+                start: d.clone().addSeconds(-15).setMilliseconds(0),
+                stop: d.clone().addSeconds(-10).setMilliseconds(0)
+            });
+            expect(res.length).toBe(6);
+        });
+
+        it('should be able to aggregate', function() {
+            var d = new XDate;
+            var tweets = _.range(0, 7).map(function(t) {
+                return _generateDataWithTimestamp(d.clone().addSeconds(-t), -t);
+            });
+            var coll = new TermCollection(tweets);
+            var res = coll.aggregate({
+                toSeconds: 6, stepSeconds: 2
+            });
+            expect(res.length).toBe(3);
+        });
+
+        it('should purge memory if too high', function() {
+            TermCollection.GC_TRIGGER_COUNT = 2000;
+            TermCollection.GC_TRIGGER_CUTOFF = 1000;
+
+            var coll = new TermCollection();
+            for(var i=0; i < TermCollection.GC_TRIGGER_COUNT + 1; i++) {
+                coll.add(_generateData(.30, .70))
+            };
+
+            expect(coll.length).toEqual(1001);
+        })
     });
 });
 

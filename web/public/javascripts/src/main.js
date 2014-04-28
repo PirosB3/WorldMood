@@ -31,7 +31,8 @@ define(['streamer', 'termCollection', 'tweetFrameView', 'pieView', 'navigationVi
         vent: app.vent
       }));
       app.realtimeGraphViewPlaceholder.show(new RealtimeGraphView({
-        collection: app.queue.memory
+        collection: app.queue,
+        vent: app.vent
       }));
 
       app.vent.trigger('streamer:sendMessage', {trackNewTerm: query});

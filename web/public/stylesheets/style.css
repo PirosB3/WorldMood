@@ -59,3 +59,12 @@
   stroke: #000;
   stroke-width: 1.5px;
 }
+
+.line.positive {
+  fill: #5cb85c;
+}
+
+.line.negative {
+  fill: #d9534f;
+}
+
