@@ -7,6 +7,7 @@ import phrase
 import utils
 
 from nltk import word_tokenize
+from nltk.probability import FreqDist
 
 class WordTestCase(unittest.TestCase):
 
@@ -259,6 +260,133 @@ class TrainedClassifierTestCase(unittest.TestCase):
             '/tmp/test-classifier/classifier.pickle']
         for c in calls:
             self.assertTrue(c in files_written)
+
+
+class RedisConditionalFreqDistTest(unittest.TestCase):
+    def setUp(self):
+        self.db = mock.MagicMock()
+
+    def test_can_init(self):
+        cfd = data_sources.RedisConditionalFreqDist(self.db, "words:hello", "positive")
+        self.assertTrue(cfd)
+
+    def test_class_not_present(self):
+        cfd = data_sources.RedisConditionalFreqDist(self.db, "words:hello", "positive")
+
+        cfd._get_class_existence = mock.MagicMock()
+        cfd._get_class_existence.return_value = False
+        self.assertEqual(cfd.keys(), [None])
+
+        cfd._get_class_existence.return_value = True
+        self.assertEqual(cfd.keys(), [True, None])
+
+    def test_can_find_true_class(self):
+        def _side_effect(*args):
+            if args == ("words:hello", "positive"):
+                return 300
+
+        self.db.hget.side_effect = _side_effect
+        cfd = data_sources.RedisConditionalFreqDist(self.db, "words:hello",
+                                                    "positive")
+        self.assertEqual(cfd[True], 300)
+
+    def test_can_find_none_class(self):
+        def _side_effect(key):
+            if key == "words:hello":
+                return { "positive": 20, "negative": 40,
+                        "neutral": 5, "total": 65 }
+
+        self.db.hgetall.side_effect = _side_effect
+        cfd = data_sources.RedisConditionalFreqDist(self.db, "words:hello",
+                                                    "positive")
+        self.assertEqual(cfd[None], 45)
+
+
+class RedisLabelFeatureDistTest(unittest.TestCase):
+
+    def setUp(self):
+        self.db = mock.MagicMock()
+
+    def test_can_init(self):
+        lfd = data_sources.RedisLabelFeatureDist(self.db, "words")
+
+        res = lfd._make_fd("positive")
+        self.assertTrue(res)
+
+    def test_can_check_probability(self):
+        def _side_effect(key):
+            if key == 'positive':
+                return FreqDist({"happy": 300})
+
+        lfd = data_sources.RedisLabelFeatureDist(self.db, "words")
+        lfd._make_fd = mock.MagicMock()
+        lfd._make_fd.side_effect = _side_effect
+
+        self.assertTrue(('positive', 'happy') in lfd)
+        self.assertFalse(('positive', 'sad') in lfd)
+
+    def test_can_get_probability(self):
+        pass
+
+
+class RedisFreqDistTest(unittest.TestCase):
+    
+    def setUp(self):
+        self.db = mock.MagicMock()
+
+    def test_should_init_with_key(self):
+        fd = data_sources.RedisFreqDist(self.db, "classes")
+        self.assertTrue(fd._db)
+        self.assertEquals(fd._hash_key, "classes")
+
+    def test_should_support_keys(self):
+        def _side_effect(key):
+            if key == 'classes':
+                return ['positive', 'negative']
+        self.db.hkeys.side_effect = _side_effect
+
+        fd = data_sources.RedisFreqDist(self.db, "classes")
+        self.assertEquals(fd.keys(), ["positive", "negative"])
+
+    def test_should_support_values(self):
+        def _side_effect(key):
+            if key == 'classes':
+                return [222, 333]
+        self.db.hvals.side_effect = _side_effect
+
+        fd = data_sources.RedisFreqDist(self.db, "classes")
+        self.assertEquals(fd.values(), [222, 333])
+
+    def test_should_support_index(self):
+        def _side_effect(*args):
+            if args == ("classes", "positive"):
+                return "332"
+        self.db.hget.side_effect = _side_effect
+
+        fd = data_sources.RedisFreqDist(self.db, "classes")
+        self.assertEquals(fd['positive'], 332)
+
+    def test_should_be_able_to_check_exists(self):
+        def _side_effect(*args):
+            if args == ("classes", "positive"):
+                return True
+            else:
+                return False
+        self.db.hexists.side_effect = _side_effect
+
+        fd = data_sources.RedisFreqDist(self.db, "classes")
+        self.assertTrue('positive' in fd)
+        self.assertFalse('negative' in fd)
+
+    def test_should_call_on_N(self):
+        def _side_effect(key):
+            if key == 'classes:count':
+                return "332"
+        self.db.get.side_effect = _side_effect
+
+        fd = data_sources.RedisFreqDist(self.db, "classes")
+        self.assertEquals(fd.N(), 332)
+
 
 class SmartPhraseIteratorTestCase(unittest.TestCase):
     def _generate_n_phrases(self, n):
