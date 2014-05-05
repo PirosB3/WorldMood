@@ -34,51 +34,43 @@ class RedisConditionalFreqDist(object):
             return [True, None]
         return [None]
 
+    def B(self):
+        return len(self.keys())
+
+    def N(self):
+        return int(self._db.hget(self._feature_key, "total"))
+
     def __getitem__(self, key):
         if key == True:
             try:
-                return self._db.hget(self._feature_key, self._label)
+                return int(self._db.hget(self._feature_key, self._label))
             except TypeError:
                 return 0
         if key == None:
             classes = self._db.hgetall(self._feature_key)
-            return classes['total'] - classes[self._label]
+            return int(classes['total']) - int(classes[self._label])
 
         raise Exception("Class works only with None and True")
 
-    #def values(self):
-        #return self._db.hvals(self._hash_key)
-
-    #def N(self):
-        #return int(self._db.get(self._n_key))
-
-    #def B(self):
-        #return int(self._db.get(self._b_key))
-
-    #def __contains__(self, key):
-        #return self._db.hexists(self._hash_key, key)
-
 
 class RedisLabelFeatureDist(object):
-    def __init__(self, db, partial_key):
+    def __init__(self, db):
         self._db = db
-        self._partial_key = partial_key
         self._fds = {}
 
     def __contains__(self, args):
         klass, feat = args
-        return feat in self.get_fd(klass)
+        return self._db.exists("words:%s" % feat)
 
-    def get_fd(self, label):
+    def __getitem__(self, args):
+        klass, feat = args
         try:
-            return self._fds[label]
+            return self._fds[klass, feat]
         except KeyError:
-            self._fds[label] = self._make_fd(label)
-        return self._fds[label]
-
-    def _make_fd(self, label):
-        key = ':'.join([self._partial_key, label])
-        return ELEProbDist(RedisFreqDist(self._db, key))
+            new_cfd = RedisConditionalFreqDist(self._db, "words:%s" % feat,
+                                               klass)
+            self._fds[klass, feat] = ELEProbDist(new_cfd)
+            return self._fds[klass, feat]
 
 
 class RedisFreqDist(dict):

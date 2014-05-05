@@ -48,9 +48,10 @@ class MRWordFrequencyCount(MRJob):
         elif k == SENTIMENT_IN_WORD_COUNTER:
             class_name, word = key[1:]
             n = sum(values)
-            REDIS.incr("words:%s:keycount" % class_name, 1)
-            REDIS.incrby("words:%s:count" % class_name, n)
-            REDIS.hset("words:%s" % class_name, word, n)
+            REDIS.hincrby("words:%s" % word, "total", n)
+            REDIS.hset("words:%s" % word, class_name, n)
+
 
 if __name__ == '__main__':
     MRWordFrequencyCount.run()
+
