@@ -93,12 +93,12 @@ class Phrase(object):
             # Single features
             can_add = n_features == None or word in n_features
             if can_add:
-               res['has(%s)' % word] = True
+               res['%s' % word] = True
 
         if bigram_analyzer:
             bigrams = bigram_analyzer.scan_features_for_bigrams(formatted_text)
             for terma, termb in bigrams:
-                res['has(%s,%s)' % (terma, termb)] = True
+                res['%s,%s' % (terma, termb)] = True
 
         return res
 
